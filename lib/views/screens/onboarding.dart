@@ -4,14 +4,13 @@ import 'package:nutripal/views/screens/signup.dart';
 
 List<Map<String, String>> _onboardingContent = [
   {
-    "assetPath": "assets/images/onboarding/calories_tracking.jpg",
+    "assetPath": "assets/images/onboarding/start_tracking.jpg",
     "content":
         "Ghi lại mọi bữa ăn và theo dõi lượng calo, protein, carbs một cách đơn giản",
   },
   {
     "assetPath": "assets/images/onboarding/macro_tracking.jpg",
-    "content":
-        "Xem báo cáo chi tiết về macro, micro và đạt được mục tiêu sức khỏe của bạn",
+    "content": "Xem báo cáo chi tiết \n về macro, micro và calo",
   },
   {
     "assetPath": "assets/images/onboarding/healthy_food.jpg",
@@ -28,7 +27,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController(initialPage: 0);
-  int _selectedPage = 0;
+  int _selectingPage = 0;
 
   @override
   void dispose() {
@@ -42,9 +41,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 100,
-        title: const Text(
-          'Chào mừng tới NutriPal!',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        title: Column(
+          children: [
+            const Text(
+              'Chào mừng tới',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(173, 0, 0, 0),
+              ),
+            ),
+            Text(
+              "NutriPal",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
         ),
       ),
       body: Center(
@@ -60,7 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   controller: _pageController,
                   onPageChanged: (int index) {
                     setState(() {
-                      _selectedPage = index;
+                      _selectingPage = index;
                     });
                   },
                   itemCount: _onboardingContent.length,
@@ -71,24 +86,49 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
 
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => SignupScreen()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _onboardingContent.length,
+                  (index) => Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: AnimatedDot(isActive: _selectingPage == index),
                   ),
-                  child: const Text("Đăng ký"),
                 ),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
+
+              const Spacer(),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(double.infinity, 52),
+                  backgroundColor: Theme.of(context).primaryColor,
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SignupScreen()),
+                ),
+                child: Text(
+                  "Đăng ký",
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-                  child: const Text("Đăng nhập"),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size(double.infinity, 52),
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                ),
+                child: Text(
+                  "Đăng nhập",
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -113,9 +153,39 @@ class OnboardingContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AspectRatio(aspectRatio: 1, child: Image.asset(assetPath)),
-        Text(content),
+        AspectRatio(
+          aspectRatio: 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(assetPath, fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(height: 15),
+        Text(
+          content,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 21),
+        ),
       ],
+    );
+  }
+}
+
+class AnimatedDot extends StatelessWidget {
+  const AnimatedDot({super.key, required this.isActive});
+
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: isActive ? 18 : 6,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive ? Theme.of(context).primaryColor : Colors.grey,
+        borderRadius: BorderRadius.circular(12),
+      ),
     );
   }
 }
