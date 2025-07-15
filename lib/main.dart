@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/views/screens/onboarding.dart';
 
 void main() {
-  runApp(const NutriPal());
+  runApp(ProviderScope(child: const NutriPal()));
 }
 
 class NutriPal extends StatelessWidget {
