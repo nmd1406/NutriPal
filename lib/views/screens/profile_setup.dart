@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:nutripal/views/screens/welcome.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
+class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
 
   @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+  ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  String _selectedGender = ""; // "male" hoặc "female"
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _enteredAge = "";
-  String _enteredHeight = "";
-  String _enteredWeight = "";
+  final _ageController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  void dispose() {
+    _ageController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ref.read(profileProvider.notifier);
+    final profile = ref.watch(profileProvider);
+
+    // Cache theme values
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+    final secondaryColor = theme.colorScheme.secondary;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -27,7 +43,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,
-            color: Theme.of(context).primaryColor,
+            color: primaryColor,
           ),
         ),
       ),
@@ -59,23 +75,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedGender = "male";
-                            });
-                          },
+                          onTap: () => viewModel.updateGender("male"),
                           child: Container(
                             padding: EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: _selectedGender == "male"
-                                  ? Theme.of(
-                                      context,
-                                    ).primaryColor.withValues(alpha: 0.1)
+                              color: profile.gender == "male"
+                                  ? primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ) // ← Dùng cached
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _selectedGender == "male"
-                                    ? Theme.of(context).primaryColor
+                                color: profile.gender == "male"
+                                    ? primaryColor
                                     : Colors.grey[300]!,
                                 width: 2,
                               ),
@@ -85,19 +97,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               children: [
                                 Icon(
                                   Icons.male,
-                                  size: 26, // Giảm icon size
-                                  color: _selectedGender == "male"
-                                      ? Theme.of(context).primaryColor
+                                  size: 26,
+                                  color: profile.gender == "male"
+                                      ? primaryColor
                                       : Colors.grey[600],
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   "Nam",
                                   style: TextStyle(
-                                    fontSize: 16, // Giảm font size
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: _selectedGender == "male"
-                                        ? Theme.of(context).primaryColor
+                                    color: profile.gender == "male"
+                                        ? primaryColor
                                         : Colors.grey[600],
                                   ),
                                 ),
@@ -109,23 +121,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedGender = "female";
-                            });
-                          },
+                          onTap: () => viewModel.updateGender("female"),
                           child: Container(
                             padding: EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: _selectedGender == "female"
-                                  ? Theme.of(
-                                      context,
-                                    ).primaryColor.withValues(alpha: 0.1)
+                              color: profile.gender == "female"
+                                  ? secondaryColor.withValues(alpha: 0.1)
                                   : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _selectedGender == "female"
-                                    ? Theme.of(context).colorScheme.secondary
+                                color: profile.gender == "female"
+                                    ? secondaryColor
                                     : Colors.grey[300]!,
                                 width: 2,
                               ),
@@ -135,9 +141,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               children: [
                                 Icon(
                                   Icons.female,
-                                  size: 26, // Giảm icon size
-                                  color: _selectedGender == "female"
-                                      ? Theme.of(context).colorScheme.secondary
+                                  size: 26,
+                                  color: profile.gender == "female"
+                                      ? secondaryColor
                                       : Colors.grey[600],
                                 ),
                                 const SizedBox(width: 8),
@@ -146,10 +152,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: _selectedGender == "female"
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.secondary
+                                    color: profile.gender == "female"
+                                        ? secondaryColor
                                         : Colors.grey[600],
                                   ),
                                 ),
@@ -167,23 +171,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-
                     TextFormField(
+                      controller: _ageController,
                       keyboardType: TextInputType.number,
                       autocorrect: false,
-                      validator: (String? enteredAge) {
-                        if (enteredAge == null || enteredAge.trim().isEmpty) {
-                          return "Vui lòng nhập tuổi";
-                        }
-                        int? age = int.tryParse(enteredAge);
-                        if (age == null || age < 10 || age > 100) {
-                          return "Tuổi phải từ 10 đến 100";
-                        }
-                        return null;
-                      },
-                      onSaved: (String? enteredAge) {
-                        _enteredAge = enteredAge!;
-                      },
+                      validator: viewModel.validateAge,
                       decoration: InputDecoration(
                         labelText: "Tuổi",
                         labelStyle: TextStyle(fontSize: 15),
@@ -200,24 +192,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       children: [
                         Expanded(
                           child: TextFormField(
+                            controller: _heightController,
                             keyboardType: TextInputType.number,
                             autocorrect: false,
-                            validator: (String? enteredHeight) {
-                              if (enteredHeight == null ||
-                                  enteredHeight.trim().isEmpty) {
-                                return "Nhập chiều cao";
-                              }
-                              double? height = double.tryParse(enteredHeight);
-                              if (height == null ||
-                                  height < 100 ||
-                                  height > 250) {
-                                return "100-250cm";
-                              }
-                              return null;
-                            },
-                            onSaved: (String? enteredHeight) {
-                              _enteredHeight = enteredHeight!;
-                            },
+                            validator: viewModel.validateHeight,
                             decoration: InputDecoration(
                               labelText: "Chiều cao",
                               labelStyle: TextStyle(fontSize: 15),
@@ -233,24 +211,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextFormField(
+                            controller: _weightController,
                             keyboardType: TextInputType.number,
                             autocorrect: false,
-                            validator: (String? enteredWeight) {
-                              if (enteredWeight == null ||
-                                  enteredWeight.trim().isEmpty) {
-                                return "Nhập cân nặng";
-                              }
-                              double? weight = double.tryParse(enteredWeight);
-                              if (weight == null ||
-                                  weight < 30 ||
-                                  weight > 200) {
-                                return "30-200kg";
-                              }
-                              return null;
-                            },
-                            onSaved: (String? enteredWeight) {
-                              _enteredWeight = enteredWeight!;
-                            },
+                            validator: viewModel.validateWeight,
                             decoration: InputDecoration(
                               labelText: "Cân nặng",
                               labelStyle: TextStyle(fontSize: 15),
@@ -269,36 +233,32 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-
                     ElevatedButton(
                       onPressed: () {
-                        if (_selectedGender.isEmpty) {
+                        if (profile.gender.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Vui lòng chọn giới tính")),
+                            SnackBar(
+                              content: Text('Vui lòng chọn giới tính'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
                           );
                           return;
                         }
 
+                        // Validate form
                         if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
+                          viewModel.updateAge(_ageController.text);
+                          viewModel.updateHeight(_heightController.text);
+                          viewModel.updateWeight(_weightController.text);
 
-                          // Process form data
-                          print("Giới tính: $_selectedGender");
-                          print("Tuổi: $_enteredAge");
-                          print("Chiều cao: $_enteredHeight cm");
-                          print("Cân nặng: $_enteredWeight kg");
-
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => WelcomeScreen(),
-                            ),
-                          );
+                          viewModel.submitProfile(context);
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(double.infinity, 48),
                         elevation: 8,
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: primaryColor,
                       ),
                       child: Text(
                         "Tiếp tục",
@@ -309,7 +269,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20), // Bottom spacing
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
