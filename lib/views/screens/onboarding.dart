@@ -102,6 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 52),
+                  elevation: 8,
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
                 onPressed: () => Navigator.of(context).push(

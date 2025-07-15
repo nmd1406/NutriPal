@@ -36,7 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
         centerTitle: true,
         title: Text(
           "Chào mừng quay trở lại",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 26),
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -115,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Quên mật khẩu?",
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -130,6 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 45),
+                  elevation: 8,
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
                 child: Text(

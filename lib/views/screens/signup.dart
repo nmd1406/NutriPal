@@ -38,7 +38,11 @@ class _SignupScreenState extends State<SignupScreen> {
         centerTitle: true,
         title: Text(
           "Tạo tài khoản",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 26),
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -147,6 +151,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 45),
+                  elevation: 8,
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
                 child: Text(
