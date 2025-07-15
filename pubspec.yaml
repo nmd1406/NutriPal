@@ -91,3 +91,5 @@ flutter:
     - assets/images/onboarding/healthy_food.jpg
     - assets/images/onboarding/start_tracking.jpg
     - assets/images/onboarding/macro_tracking.jpg
+
+    - assets/images/welcome.png
