@@ -1,8 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/views/screens/onboarding.dart';
+import 'package:nutripal/firebase_options.dart';
+import 'package:nutripal/views/widgets/auth_wrapper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(ProviderScope(child: const NutriPal()));
 }
 
@@ -34,7 +38,7 @@ class NutriPal extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const OnboardingScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
