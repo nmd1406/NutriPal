@@ -1,29 +1,56 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nutripal/models/profile.dart';
-import 'package:nutripal/views/screens/welcome.dart';
+import 'package:nutripal/services/auth_service.dart';
+import 'package:nutripal/views/screens/welcome_screen.dart';
 
-class ProfileViewmodel extends StateNotifier<Profile> {
-  ProfileViewmodel() : super(Profile.empty());
+class ProfileViewModel extends AsyncNotifier<Profile> {
+  final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  FutureOr<Profile> build() async {
+    final user = _authService.currentUser;
+
+    if (user != null) {
+      try {
+        final doc = await _firestore.collection("profiles").doc(user.uid).get();
+
+        if (doc.exists) {
+          return Profile.fromJson(doc.data()!);
+        }
+      } catch (e) {
+        return Profile.empty();
+      }
+    }
+    return Profile.empty();
+  }
 
   void updateGender(String gender) {
-    state = state.copyWith(gender: gender);
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(gender: gender));
   }
 
   void updateAge(String ageStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
     int age = int.tryParse(ageStr) ?? 0;
-    state = state.copyWith(age: age);
+    state = AsyncValue.data(currentProfile.copyWith(age: age));
   }
 
   void updateHeight(String heightStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
     double height = double.tryParse(heightStr) ?? 0.0;
-    state = state.copyWith(height: height);
+    state = AsyncValue.data(currentProfile.copyWith(height: height));
   }
 
   void updateWeight(String weightStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
     double weight = double.tryParse(weightStr) ?? 0.0;
-    state = state.copyWith(weight: weight);
+    state = AsyncValue.data(currentProfile.copyWith(weight: weight));
   }
 
   String? validateGender(String? gender) {
@@ -67,16 +94,36 @@ class ProfileViewmodel extends StateNotifier<Profile> {
     return null;
   }
 
-  void submitProfile(BuildContext context) {
-    // Validation đã được handle ở UI level
-    // Chỉ cần navigate
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => WelcomeScreen()),
-    );
+  Future<void> submitProfile(BuildContext context) async {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    if (currentProfile == null || !currentProfile.isValid) {
+      return;
+    }
+
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final user = _authService.currentUser;
+      if (user == null) {
+        throw Exception("User not authenticated");
+      }
+
+      final profileWithUid = currentProfile.copyWith(uid: user.uid);
+      await _firestore
+          .collection("profiles")
+          .doc(profileWithUid.uid)
+          .set(profileWithUid.toJson());
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      }
+      return profileWithUid;
+    });
   }
 }
 
-final profileProvider = StateNotifierProvider<ProfileViewmodel, Profile>(
-  (ref) => ProfileViewmodel(),
+final profileProvider = AsyncNotifierProvider<ProfileViewModel, Profile>(
+  () => ProfileViewModel(),
 );
