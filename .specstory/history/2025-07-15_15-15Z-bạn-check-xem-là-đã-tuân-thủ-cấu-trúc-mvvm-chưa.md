@@ -3961,7 +3961,6044 @@ tôi nghĩ không nên dùng onchanged mà chỉ nên cập nhật profile khi �
 
 _**Assistant**_
 
+### 💡 **Đúng rồi! Cách này tốt hơn:**
 
+**Lý do:**
+1. **Better performance** - Không rebuild UI liên tục khi typing
+2. **Standard form behavior** - Validate và update khi submit
+3. **Less resource usage** - Không create nhiều Profile objects
+4. **Cleaner UX** - User không thấy button enable/disable liên tục
+
+### 🔧 **Cách implement:**
+
+**1. Remove onChanged và dùng controllers:** 
+```
+
+```
+**2. Update TextFormFields với controllers:** 
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+**3. Update submit button - luôn enabled và handle validation:** 
+```
+
+```
+**4. Update ProfileViewModel - Remove update calls in submitProfile:** 
+```
+
+```
+### ✅ **Kết quả:**
+
+**Behavior mới:**
+1. **Gender selection** - Vẫn update real-time (cho UX tốt)
+2. **Text inputs** - Chỉ validate khi submit
+3. **Submit button** - Luôn enabled, handle validation khi tap
+4. **Performance** - Không rebuild UI khi typing
+
+**Flow:**
+1. User chọn gender → Update ngay (visual feedback)
+2. User nhập text → Chỉ store trong controllers
+3. User tap submit → Validate form → Update profile → Navigate
+
+**Lợi ích:**
+- ✅ Better performance (no frequent rebuilds)
+- ✅ Standard form behavior
+- ✅ Clear separation of concerns
+- ✅ User-friendly (button always clickable)
+
+Bạn thấy cách này tốt hơn không? 🎯
+
+---
+
+_**User**_
+
+giờ tôi muốn thực hiện auth sử dụng firebase, bạn gợi ý cho tôi được không
+
+---
+
+_**Assistant**_
+
+### 🔥 **Firebase Authentication Setup cho NutriPal:**
+
+### 📋 **1. Dependencies cần thêm:**
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9
+  firebase_core: ^2.24.2  # Đã có
+  firebase_auth: ^4.15.3  # ← Thêm
+  google_sign_in: ^6.1.6  # ← Optional cho Google login
+```
+
+### 🏗️ **2. Cấu trúc MVVM cho Authentication:**
+
+```
+lib/
+├── models/
+│   ├── profile.dart           # Đã có
+│   ├── auth_user.dart         # ← Mới
+│   └── auth_state.dart        # ← Mới
+├── viewmodels/
+│   ├── profile_viewmodel.dart # Đã có
+│   └── auth_viewmodel.dart    # ← Mới
+├── services/
+│   └── auth_service.dart      # ← Mới
+└── views/
+    ├── screens/
+    │   ├── login.dart         # Đã có - sẽ refactor
+    │   ├── signup.dart        # Đã có - sẽ refactor
+    │   └── profile_setup.dart # Đã có
+    └── widgets/
+        └── auth_wrapper.dart  # ← Mới
+```
+
+### 🎯 **3. Luồng Authentication đề xuất:**
+
+```
+1. App Start → AuthWrapper → Check auth state
+2. Not authenticated → Login/Signup screens
+3. Authenticated → Check profile exists
+4. No profile → ProfileSetup screen
+5. Has profile → Welcome/Main screen
+```
+
+### 🚀 **4. Implementation Plan:**
+
+**Phase 1: Auth Service & Models**
+- AuthService với Firebase Auth
+- AuthUser model
+- AuthState model
+
+**Phase 2: Auth ViewModel**
+- Login/Signup logic
+- State management
+- Error handling
+
+**Phase 3: Update UI**
+- Refactor Login/Signup screens
+- Add AuthWrapper
+- Update navigation flow
+
+**Phase 4: Integration**
+- Connect với ProfileViewModel
+- Persist profile data
+- Handle user sessions
+
+### 💡 **5. Đề xuất features:**
+
+**Essential:**
+- ✅ Email/Password authentication
+- ✅ User registration
+- ✅ Login/Logout
+- ✅ Auto-login (remember user)
+
+**Nice-to-have:**
+- 🔄 Google Sign-In
+- 🔄 Email verification
+- 🔄 Password reset
+- 🔄 User profile management
+
+### 🤔 **6. Questions cho bạn:**
+
+1. **Auth methods nào muốn implement?**
+   - Email/Password only?
+   - Google Sign-In?
+   - Facebook/Apple login?
+
+2. **Profile data storage:**
+   - Firestore để lưu profile?
+   - SharedPreferences local?
+   - Combine cả hai?
+
+3. **Navigation flow:**
+   - Login → Profile Setup → Welcome?
+   - Hay Login → Welcome (profile setup optional)?
+
+4. **Error handling:**
+   - SnackBar messages?
+   - Dedicated error screens?
+
+Bạn muốn bắt đầu implement từ đâu? Tôi suggest bắt đầu với **AuthService** và **AuthUser model** trước.
+
+---
+
+_**User**_
+
+auth_state và auth_wrapper có tác dụng gì vậy
+
+---
+
+_**Assistant**_
+
+### 🔍 **AuthState - Quản lý trạng thái xác thực:**
+
+**Tác dụng:**
+- Đại diện cho các trạng thái khác nhau của authentication
+- Giúp UI biết cần hiển thị gì
+
+**Các trạng thái:**
+```dart
+// lib/models/auth_state.dart
+enum AuthStatus {
+  initial,        // Chưa kiểm tra
+  loading,        // Đang xử lý
+  authenticated,  // Đã đăng nhập
+  unauthenticated // Chưa đăng nhập
+}
+
+class AuthState {
+  final AuthStatus status;
+  final User? user;           // Firebase User
+  final String? errorMessage;
+  final bool isLoading;
+
+  const AuthState({
+    required this.status,
+    this.user,
+    this.errorMessage,
+    this.isLoading = false,
+  });
+
+  // Helper getters
+  bool get isAuthenticated => status == AuthStatus.authenticated;
+  bool get isUnauthenticated => status == AuthStatus.unauthenticated;
+  bool get hasError => errorMessage != null;
+}
+```
+
+---
+
+### 🎯 **AuthWrapper - Điều hướng theo auth state:**
+
+**Tác dụng:**
+- Wrapper cho toàn bộ app
+- Tự động điều hướng dựa trên auth state
+- Tránh phải check auth ở mọi screen
+
+**Cách hoạt động:**
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    
+    return switch (authState.status) {
+      AuthStatus.initial => SplashScreen(),           // Đang kiểm tra
+      AuthStatus.loading => LoadingScreen(),          // Đang xử lý
+      AuthStatus.authenticated => MainAppFlow(),      // Đã login
+      AuthStatus.unauthenticated => OnboardingScreen(), // Chưa login
+    };
+  }
+}
+```
+
+---
+
+### 🔄 **Flow hoạt động:**
+
+**1. App khởi động:**
+```
+main.dart → AuthWrapper → Check Firebase Auth State
+```
+
+**2. Chưa đăng nhập:**
+```
+AuthWrapper → OnboardingScreen → Login/Signup
+```
+
+**3. Đã đăng nhập:**
+```
+AuthWrapper → Check Profile → ProfileSetup hoặc Welcome
+```
+
+**4. Sau khi login thành công:**
+```
+AuthViewModel updates AuthState → AuthWrapper rebuild → Navigate
+```
+
+---
+
+### 💡 **Lợi ích:**
+
+**AuthState:**
+- ✅ Centralized auth status management
+- ✅ UI knows exactly what to show
+- ✅ Easy error handling
+- ✅ Loading states management
+
+**AuthWrapper:**
+- ✅ Automatic navigation based on auth
+- ✅ No need to check auth in every screen
+- ✅ Single source of truth for routing
+- ✅ Clean separation of concerns
+
+---
+
+### 🚀 **Ví dụ sử dụng:**
+
+**main.dart:**
+```dart
+class NutriPal extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: AuthWrapper(), // ← Wrapper toàn bộ app
+    );
+  }
+}
+```
+
+**AuthWrapper logic:**
+```dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    
+    if (authState.isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (authState.isAuthenticated) {
+      // Check if user has profile
+      final profile = ref.watch(profileProvider);
+      
+      if (profile.isEmpty) {
+        return ProfileSetupScreen();
+      } else {
+        return WelcomeScreen();
+      }
+    }
+    
+    return OnboardingScreen();
+  }
+}
+```
+
+---
+
+### 🤔 **Có cần thiết không?**
+
+**Cho dự án nhỏ:** Có thể skip AuthWrapper, chỉ cần check auth trong từng screen
+
+**Cho dự án lớn:** Rất hữu ích, giúp code clean và dễ maintain
+
+**Cho NutriPal:** Recommend dùng vì:
+- Có multiple screens cần auth check
+- Clean navigation logic
+- Dễ extend sau này
+
+Bạn thấy có hữu ích không? 🎯
+
+---
+
+_**User**_
+
+về user sẽ có các thông tin như, imageurl, username, email, password, tôi nên triển khai như nào
+
+---
+
+_**Assistant**_
+
+### 🏗️ **Cấu trúc User Model cho Firebase Auth:**
+
+### 📋 **1. Phân tích thông tin User:**
+
+```dart
+User info:
+├── imageUrl    → Firestore (custom field)
+├── username    → Firestore (custom field)  
+├── email       → Firebase Auth (built-in)
+└── password    → Firebase Auth (hashed, không lưu trực tiếp)
+```
+
+### 🎯 **2. Recommended Architecture:**
+
+**Firebase Auth User (built-in):**
+- email
+- uid (unique ID)
+- password (hashed by Firebase)
+
+**Custom User Model (Firestore):**
+- uid (reference to Firebase Auth)
+- username
+- imageUrl
+- profile data
+
+### 🚀 **3. Implementation:**
+
+**User Model:**
+```dart
+// lib/models/user.dart
+class AppUser {
+  final String uid;
+  final String email;
+  final String username;
+  final String? imageUrl;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const AppUser({
+    required this.uid,
+    required this.email,
+    required this.username,
+    this.imageUrl,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  AppUser copyWith({
+    String? uid,
+    String? email,
+    String? username,
+    String? imageUrl,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return AppUser(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      imageUrl: imageUrl ?? this.imageUrl,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'email': email,
+      'username': username,
+      'imageUrl': imageUrl,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
+      uid: json['uid'] as String,
+      email: json['email'] as String,
+      username: json['username'] as String,
+      imageUrl: json['imageUrl'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  static AppUser empty() {
+    return AppUser(
+      uid: '',
+      email: '',
+      username: '',
+      imageUrl: null,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+}
+```
+
+**AuthState với User:**
+```dart
+// lib/models/auth_state.dart
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  error,
+}
+
+class AuthState {
+  final AuthStatus status;
+  final AppUser? user;        // Custom user model
+  final String? errorMessage;
+  final bool isLoading;
+
+  const AuthState({
+    required this.status,
+    this.user,
+    this.errorMessage,
+    this.isLoading = false,
+  });
+
+  AuthState copyWith({
+    AuthStatus? status,
+    AppUser? user,
+    String? errorMessage,
+    bool? isLoading,
+  }) {
+    return AuthState(
+      status: status ?? this.status,
+      user: user ?? this.user,
+      errorMessage: errorMessage ?? this.errorMessage,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
+
+  bool get isAuthenticated => status == AuthStatus.authenticated;
+  bool get isUnauthenticated => status == AuthStatus.unauthenticated;
+  bool get hasError => errorMessage != null;
+}
+```
+
+### 🔧 **4. AuthService:**
+
+```dart
+// lib/services/auth_service.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/user.dart';
+
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Get current Firebase user
+  User? get currentFirebaseUser => _auth.currentUser;
+
+  // Auth state stream
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Sign up with email/password
+  Future<AppUser?> signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    try {
+      // Create Firebase Auth user
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        // Create custom user document in Firestore
+        final appUser = AppUser(
+          uid: credential.user!.uid,
+          email: email,
+          username: username,
+          imageUrl: null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        // Save to Firestore
+        await _firestore
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(appUser.toJson());
+
+        return appUser;
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  // Sign in with email/password
+  Future<AppUser?> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        // Get user data from Firestore
+        return await getUserData(credential.user!.uid);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  // Get user data from Firestore
+  Future<AppUser?> getUserData(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      
+      if (doc.exists) {
+        return AppUser.fromJson(doc.data()!);
+      }
+    } catch (e) {
+      throw Exception('Failed to get user data: $e');
+    }
+    return null;
+  }
+
+  // Update user profile
+  Future<void> updateUserProfile({
+    required String uid,
+    String? username,
+    String? imageUrl,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      if (username != null) updateData['username'] = username;
+      if (imageUrl != null) updateData['imageUrl'] = imageUrl;
+
+      await _firestore.collection('users').doc(uid).update(updateData);
+    } catch (e) {
+      throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Handle Firebase Auth exceptions
+  String _handleAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'Email không tồn tại';
+      case 'wrong-password':
+        return 'Mật khẩu không đúng';
+      case 'email-already-in-use':
+        return 'Email đã được sử dụng';
+      case 'weak-password':
+        return 'Mật khẩu quá yếu';
+      case 'invalid-email':
+        return 'Email không hợp lệ';
+      default:
+        return 'Đã xảy ra lỗi: ${e.message}';
+    }
+  }
+}
+```
+
+### 📱 **5. Dependencies cần thêm:**
+
+```yaml
+dependencies:
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  image_picker: ^1.0.4  # Cho imageUrl upload
+```
+
+### 🎯 **6. Cấu trúc Firestore:**
+
+```
+users/
+├── {uid}/
+│   ├── uid: "firebase_user_uid"
+│   ├── email: "user@example.com"
+│   ├── username: "john_doe"
+│   ├── imageUrl: "https://..."
+│   ├── createdAt: "2024-01-01T00:00:00.000Z"
+│   └── updatedAt: "2024-01-01T00:00:00.000Z"
+```
+
+### 💡 **Lợi ích cách này:**
+
+1. **Security**: Password được Firebase handle
+2. **Scalability**: Firestore cho custom data
+3. **Flexibility**: Dễ extend thêm fields
+4. **Performance**: Efficient queries
+5. **Real-time**: Firestore real-time updates
+
+### 🤔 **Next steps:**
+
+1. **AuthViewModel** để connect với AuthService
+2. **Update Login/Signup screens** với user model
+3. **Connect với ProfileViewModel** (user + profile relationship)
+
+Bạn thấy cách này có phù hợp không? 🚀
+
+---
+
+_**User**_
+
+sau bước sign up thì có bước nhập thông tin profile thì tôi nên xử lý như nào
+
+---
+
+_**Assistant**_
+
+### 🔄 **Xử lý flow Sign up → Profile Setup:**
+
+### 🎯 **1. Flow đề xuất:**
+
+```
+Sign up → Create Firebase Auth User → Profile Setup → Save Profile → Welcome
+```
+
+### 🏗️ **2. Cấu trúc dữ liệu:**
+
+**Firebase Auth User:**
+- uid, email, password (Firebase handled)
+
+**Firestore Users Collection:**
+- uid, email, username, imageUrl, createdAt, updatedAt
+
+**Firestore Profiles Collection:**
+- uid (reference), gender, age, height, weight, createdAt, updatedAt
+
+### 🚀 **3. Implementation:**
+
+**Update AuthService:**
+```dart
+// lib/services/auth_service.dart
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Sign up - chỉ tạo user, chưa profile
+  Future<AppUser?> signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    try {
+      // Create Firebase Auth user
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        // Create user document (không có profile data)
+        final appUser = AppUser(
+          uid: credential.user!.uid,
+          email: email,
+          username: username,
+          imageUrl: null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        // Save user to Firestore
+        await _firestore
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(appUser.toJson());
+
+        return appUser;
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  // Check if user has profile
+  Future<bool> hasProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('profiles').doc(uid).get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+```
+
+**Update ProfileViewModel:**
+```dart
+// lib/viewmodels/profile_viewmodel.dart
+class ProfileViewModel extends StateNotifier<Profile> {
+  ProfileViewModel(this._authService) : super(Profile.empty());
+
+  final AuthService _authService;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Save profile to Firestore
+  Future<void> saveProfile(BuildContext context) async {
+    if (!state.isValid) return;
+
+    try {
+      state = state.copyWith(isLoading: true);
+
+      // Get current user
+      final user = _authService.currentFirebaseUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      // Create profile document
+      final profileData = {
+        'uid': user.uid,
+        'gender': state.gender,
+        'age': state.age,
+        'height': state.height,
+        'weight': state.weight,
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      // Save to Firestore
+      await _firestore
+          .collection('profiles')
+          .doc(user.uid)
+          .set(profileData);
+
+      // Navigate to welcome
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Lỗi lưu thông tin: $e',
+      );
+    }
+  }
+
+  // Load profile from Firestore
+  Future<void> loadProfile() async {
+    try {
+      final user = _authService.currentFirebaseUser;
+      if (user == null) return;
+
+      final doc = await _firestore.collection('profiles').doc(user.uid).get();
+      
+      if (doc.exists) {
+        final data = doc.data()!;
+        state = Profile(
+          gender: data['gender'],
+          age: data['age'],
+          height: data['height'].toDouble(),
+          weight: data['weight'].toDouble(),
+        );
+      }
+    } catch (e) {
+      // Handle error
+    }
+  }
+}
+
+// Provider với dependency injection
+final profileProvider = StateNotifierProvider<ProfileViewModel, Profile>(
+  (ref) => ProfileViewModel(ref.read(authServiceProvider)),
+);
+```
+
+**Update AuthViewModel:**
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends StateNotifier<AuthState> {
+  AuthViewModel(this._authService) : super(AuthState.initial());
+
+  final AuthService _authService;
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final user = await _authService.signUp(
+        email: email,
+        password: password,
+        username: username,
+      );
+
+      if (user != null) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+        );
+
+        // Navigate to Profile Setup
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}
+```
+
+**Update AuthWrapper:**
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    return switch (authState.status) {
+      AuthStatus.initial => const SplashScreen(),
+      AuthStatus.loading => const LoadingScreen(),
+      AuthStatus.authenticated => const AuthenticatedFlow(),
+      AuthStatus.unauthenticated => const OnboardingScreen(),
+      AuthStatus.error => const ErrorScreen(),
+    };
+  }
+}
+
+class AuthenticatedFlow extends ConsumerWidget {
+  const AuthenticatedFlow({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authService = ref.read(authServiceProvider);
+    final user = ref.watch(authProvider).user;
+
+    if (user == null) return const OnboardingScreen();
+
+    return FutureBuilder<bool>(
+      future: authService.hasProfile(user.uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoadingScreen();
+        }
+
+        final hasProfile = snapshot.data ?? false;
+
+        if (hasProfile) {
+          // Load profile data
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(profileProvider.notifier).loadProfile();
+          });
+          return const WelcomeScreen();
+        } else {
+          return const ProfileSetupScreen();
+        }
+      },
+    );
+  }
+}
+```
+
+### 📱 **4. Update ProfileSetupScreen:**
+
+```dart
+// lib/views/screens/profile_setup.dart
+class ProfileSetupScreen extends ConsumerStatefulWidget {
+  const ProfileSetupScreen({super.key});
+
+  @override
+  ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+}
+
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _ageController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = ref.read(profileProvider.notifier);
+    final profile = ref.watch(profileProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Thông tin cơ bản"),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Gender selection
+                // Age, Height, Weight fields
+                // ...existing UI code...
+
+                // Submit button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: profile.isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              // Update profile with form data
+                              viewModel.updateAge(_ageController.text);
+                              viewModel.updateHeight(_heightController.text);
+                              viewModel.updateWeight(_weightController.text);
+                              
+                              // Save to Firestore
+                              await viewModel.saveProfile(context);
+                            }
+                          },
+                    child: profile.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Hoàn thành'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 🎯 **5. Firestore Structure:**
+
+```
+users/
+├── {uid}/
+│   ├── uid: "firebase_user_uid"
+│   ├── email: "user@example.com"
+│   ├── username: "john_doe"
+│   ├── imageUrl: null
+│   ├── createdAt: "2024-01-01T00:00:00.000Z"
+│   └── updatedAt: "2024-01-01T00:00:00.000Z"
+
+profiles/
+├── {uid}/
+│   ├── uid: "firebase_user_uid"
+│   ├── gender: "male"
+│   ├── age: 25
+│   ├── height: 175.0
+│   ├── weight: 70.0
+│   ├── createdAt: "2024-01-01T00:00:00.000Z"
+│   └── updatedAt: "2024-01-01T00:00:00.000Z"
+```
+
+### 💡 **Lợi ích:**
+
+1. **Separation of concerns**: User info vs Profile info
+2. **Flexible**: User có thể skip profile setup tạm thời
+3. **Scalable**: Dễ add thêm profile fields
+4. **Real-time**: Firestore sync
+5. **Offline support**: Firestore cache
+
+### 🔄 **Flow tổng quát:**
+
+```
+1. Sign up → Create user in Firebase Auth + Firestore users
+2. Redirect to Profile Setup
+3. Fill profile → Save to Firestore profiles
+4. Redirect to Welcome screen
+5. Future logins → Check profile exists → Direct flow
+```
+
+Bạn thấy cách này có phù hợp không? 🚀
+
+---
+
+_**User**_
+
+nếu giả sử user thoát ứng dụng khi chưa hoàn thành việc nhập thông tin profile thì sao
+
+---
+
+_**Assistant**_
+
+### 🔄 **Xử lý khi User thoát app trước khi hoàn thành Profile:**
+
+### 🎯 **1. Scenarios có thể xảy ra:**
+
+```
+User Sign up → Profile Setup Screen → User thoát app → Mở app lại
+```
+
+**Trạng thái:**
+- ✅ Firebase Auth: User đã authenticated
+- ❌ Firestore profiles: Chưa có profile data
+- 🤔 App cần xử lý: Đưa user về Profile Setup
+
+### 🚀 **2. Giải pháp trong AuthWrapper:**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+
+        final firebaseUser = snapshot.data;
+        
+        if (firebaseUser == null) {
+          // Chưa đăng nhập
+          return const OnboardingScreen();
+        }
+
+        // Đã đăng nhập → Check profile status
+        return FutureBuilder<bool>(
+          future: _checkProfileExists(firebaseUser.uid),
+          builder: (context, profileSnapshot) {
+            if (profileSnapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            final hasProfile = profileSnapshot.data ?? false;
+
+            if (hasProfile) {
+              // Có profile → Load và vào app
+              return const MainApp();
+            } else {
+              // Chưa có profile → Quay lại Profile Setup
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _checkProfileExists(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(uid)
+          .get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+```
+
+### 🔧 **3. Enhanced ProfileSetupScreen với Auto-save:**
+
+```dart
+// lib/views/screens/profile_setup.dart
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _ageController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDraftProfile();
+  }
+
+  // Load profile draft từ local storage
+  Future<void> _loadDraftProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    
+    if (uid != null) {
+      // Load draft data
+      final gender = prefs.getString('draft_gender_$uid') ?? '';
+      final age = prefs.getString('draft_age_$uid') ?? '';
+      final height = prefs.getString('draft_height_$uid') ?? '';
+      final weight = prefs.getString('draft_weight_$uid') ?? '';
+
+      // Restore form data
+      setState(() {
+        _ageController.text = age;
+        _heightController.text = height;
+        _weightController.text = weight;
+      });
+
+      // Update viewmodel
+      if (gender.isNotEmpty) {
+        ref.read(profileProvider.notifier).updateGender(gender);
+      }
+    }
+  }
+
+  // Auto-save draft khi user thay đổi
+  void _saveDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final profile = ref.read(profileProvider);
+    
+    if (uid != null) {
+      await prefs.setString('draft_gender_$uid', profile.gender);
+      await prefs.setString('draft_age_$uid', _ageController.text);
+      await prefs.setString('draft_height_$uid', _heightController.text);
+      await prefs.setString('draft_weight_$uid', _weightController.text);
+    }
+  }
+
+  // Clear draft sau khi save thành công
+  void _clearDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    
+    if (uid != null) {
+      await prefs.remove('draft_gender_$uid');
+      await prefs.remove('draft_age_$uid');
+      await prefs.remove('draft_height_$uid');
+      await prefs.remove('draft_weight_$uid');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = ref.read(profileProvider.notifier);
+    final profile = ref.watch(profileProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Thông tin cơ bản"),
+        // Option: Thêm skip button
+        actions: [
+          TextButton(
+            onPressed: () => _showSkipDialog(context),
+            child: const Text("Bỏ qua"),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Gender selection
+              GestureDetector(
+                onTap: () {
+                  viewModel.updateGender("male");
+                  _saveDraft(); // Auto-save
+                },
+                child: Container(/* Gender UI */),
+              ),
+
+              // Age field
+              TextFormField(
+                controller: _ageController,
+                onChanged: (value) {
+                  viewModel.updateAge(value);
+                  _saveDraft(); // Auto-save
+                },
+                decoration: const InputDecoration(labelText: 'Tuổi'),
+              ),
+
+              // Height field
+              TextFormField(
+                controller: _heightController,
+                onChanged: (value) {
+                  viewModel.updateHeight(value);
+                  _saveDraft(); // Auto-save
+                },
+                decoration: const InputDecoration(labelText: 'Chiều cao'),
+              ),
+
+              // Weight field
+              TextFormField(
+                controller: _weightController,
+                onChanged: (value) {
+                  viewModel.updateWeight(value);
+                  _saveDraft(); // Auto-save
+                },
+                decoration: const InputDecoration(labelText: 'Cân nặng'),
+              ),
+
+              // Submit button
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    await viewModel.saveProfile(context);
+                    _clearDraft(); // Clear draft after success
+                  }
+                },
+                child: const Text('Hoàn thành'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSkipDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bỏ qua thông tin?'),
+        content: const Text(
+          'Bạn có thể cập nhật thông tin này sau trong phần cài đặt.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tiếp tục nhập'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _skipProfileSetup();
+            },
+            child: const Text('Bỏ qua'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _skipProfileSetup() {
+    // Navigate to main app without profile
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const MainApp()),
+    );
+  }
+}
+```
+
+### 🎯 **4. Enhanced Profile Model:**
+
+```dart
+// lib/models/profile.dart
+class Profile {
+  // ...existing fields...
+  final bool isComplete;
+
+  const Profile({
+    required this.gender,
+    required this.age,
+    required this.height,
+    required this.weight,
+    this.isComplete = false,
+  });
+
+  bool get isValid {
+    return gender.isNotEmpty && age > 0 && height > 0 && weight > 0;
+  }
+
+  bool get isEmpty {
+    return gender.isEmpty && age == 0 && height == 0 && weight == 0;
+  }
+
+  // Partial profile (có thể chưa complete)
+  bool get isPartial {
+    return !isEmpty && !isValid;
+  }
+
+  Profile copyWith({
+    String? gender,
+    int? age,
+    double? height,
+    double? weight,
+    bool? isComplete,
+  }) {
+    return Profile(
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      isComplete: isComplete ?? this.isComplete,
+    );
+  }
+}
+```
+
+### 🚀 **5. Dependencies cần thêm:**
+
+```yaml
+dependencies:
+  shared_preferences: ^2.2.2  # Cho draft saving
+```
+
+### 💡 **6. Flow scenarios:**
+
+**Scenario 1: User hoàn thành profile**
+```
+Sign up → Profile Setup → Fill data → Save → Welcome → Done
+```
+
+**Scenario 2: User thoát giữa chừng**
+```
+Sign up → Profile Setup → Fill partial → Exit app → Open app → Profile Setup (with draft data)
+```
+
+**Scenario 3: User skip profile**
+```
+Sign up → Profile Setup → Skip → Main App → (Có thể setup sau)
+```
+
+### 🎯 **7. Lợi ích:**
+
+1. **User Experience**: Không mất data khi thoát app
+2. **Flexibility**: Cho phép skip profile setup
+3. **Data persistence**: Draft data được lưu local
+4. **Seamless**: Auto-redirect đúng screen
+5. **Recovery**: Khôi phục được progress
+
+### 🔄 **8. Test cases:**
+
+1. ✅ Sign up → Fill profile → Complete → Success
+2. ✅ Sign up → Fill partial → Exit → Reopen → Continue
+3. ✅ Sign up → Skip → Main app → Profile incomplete
+4. ✅ Login existing user → Has profile → Main app
+5. ✅ Login existing user → No profile → Profile setup
+
+Bạn thấy cách xử lý này có phù hợp không? 🚀
+
+---
+
+_**User**_
+
+vậy authstate có còn cần thiết không khi đã có authwrapper
+
+---
+
+_**Assistant**_
+
+### 🤔 **AuthState vs AuthWrapper - Có cần thiết không?**
+
+### 🎯 **Phân tích:**
+
+**AuthWrapper hiện tại:**
+```dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Direct Firebase Auth state handling
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        
+        final firebaseUser = snapshot.data;
+        // ...
+      },
+    );
+  }
+}
+```
+
+### 💡 **Với setup đơn giản: AuthState KHÔNG cần thiết**
+
+**Lý do:**
+1. **Direct Firebase Auth**: Dùng trực tiếp `FirebaseAuth.instance.authStateChanges()`
+2. **Simple flow**: Chỉ cần check authenticated/unauthenticated
+3. **Less complexity**: Ít layer trung gian
+4. **Sufficient for basic apps**: Đủ cho hầu hết use cases
+
+### 🚀 **Cách đơn giản (Recommended cho NutriPal):**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+
+        final firebaseUser = snapshot.data;
+        
+        if (firebaseUser == null) {
+          // Not authenticated
+          return const OnboardingScreen();
+        }
+
+        // Authenticated - check profile
+        return FutureBuilder<bool>(
+          future: _hasProfile(firebaseUser.uid),
+          builder: (context, profileSnapshot) {
+            if (profileSnapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            final hasProfile = profileSnapshot.data ?? false;
+            
+            if (hasProfile) {
+              return const MainApp();
+            } else {
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _hasProfile(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(uid)
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+```
+
+### 🔧 **Khi nào CẦN AuthState:**
+
+**1. Complex authentication logic:**
+```dart
+// Multiple auth states cần track
+enum AuthStatus {
+  initial,
+  authenticating,
+  authenticated,
+  unauthenticated,
+  emailVerificationRequired,
+  profileSetupRequired,
+  error,
+}
+```
+
+**2. Error handling across app:**
+```dart
+// Cần show error messages ở nhiều places
+class AuthState {
+  final AuthStatus status;
+  final User? user;
+  final String? errorMessage;
+  final bool isLoading;
+}
+```
+
+**3. Custom authentication flow:**
+```dart
+// Multi-step authentication
+class AuthViewModel extends StateNotifier<AuthState> {
+  Future<void> signInWithGoogle() async {
+    state = state.copyWith(status: AuthStatus.authenticating);
+    // Complex logic...
+  }
+}
+```
+
+### 📊 **So sánh:**
+
+| Feature | Simple AuthWrapper | AuthWrapper + AuthState |
+|---------|-------------------|-------------------------|
+| **Complexity** | ✅ Low | ❌ High |
+| **Setup time** | ✅ Fast | ❌ Slow |
+| **Error handling** | ⚠️ Limited | ✅ Advanced |
+| **Custom flows** | ❌ Hard | ✅ Easy |
+| **Testing** | ✅ Simple | ❌ Complex |
+| **Maintenance** | ✅ Easy | ⚠️ Medium |
+
+### 🎯 **Recommendation cho NutriPal:**
+
+**✅ KHÔNG dùng AuthState vì:**
+1. **Simple requirements**: Chỉ cần login/logout
+2. **Direct Firebase**: Firebase Auth đã handle state tốt
+3. **Faster development**: Ít boilerplate code
+4. **Easy to understand**: Straightforward logic
+5. **Less bugs**: Fewer moving parts
+
+**❌ Chỉ dùng AuthState khi:**
+1. **Complex auth flows**: Multi-step authentication
+2. **Advanced error handling**: Custom error UI
+3. **Multiple auth methods**: Google, Facebook, Apple, etc.
+4. **Custom business logic**: Special authentication rules
+
+### 🚀 **Simplified structure:**
+
+```
+lib/
+├── services/
+│   └── auth_service.dart     # Firebase Auth operations
+├── views/
+│   ├── widgets/
+│   │   └── auth_wrapper.dart # Simple routing logic
+│   └── screens/
+│       ├── login.dart
+│       ├── signup.dart
+│       └── profile_setup.dart
+└── viewmodels/
+    └── profile_viewmodel.dart # Only profile state
+```
+
+### 💡 **Kết luận:**
+
+**Cho NutriPal hiện tại:**
+- ✅ Dùng AuthWrapper đơn giản
+- ❌ Bỏ AuthState và AuthViewModel
+- ✅ Direct Firebase Auth stream
+- ✅ Focus vào Profile management
+
+**Có thể thêm AuthState sau** khi app phức tạp hơn và cần advanced features.
+
+Bạn đồng ý approach này không? 🎯
+
+---
+
+_**User**_
+
+vậy từ những góp ý trên, chốt lại cho tôi phương án, hướng làm để áp dụng firebase cho chức năng đăng nhập, đăng ký, từ model, viewmodel, view
+
+---
+
+_**Assistant**_
+
+### 🎯 **Phương án Firebase Auth cho NutriPal:**
+
+## 📋 **1. Cấu trúc tổng quát:**
+
+### **Flow:**
+```
+App Start → AuthWrapper → Check Firebase Auth
+├── Not authenticated → OnboardingScreen → Login/Signup
+└── Authenticated → Check Profile
+    ├── Has profile → MainApp
+    └── No profile → ProfileSetupScreen
+```
+
+### **Architecture:**
+```
+lib/
+├── models/
+│   ├── app_user.dart          # User model
+│   └── profile.dart           # Profile model (existing)
+├── services/
+│   └── auth_service.dart      # Firebase Auth operations
+├── viewmodels/
+│   ├── auth_viewmodel.dart    # Login/Signup logic
+│   └── profile_viewmodel.dart # Profile management (existing)
+├── views/
+│   ├── widgets/
+│   │   └── auth_wrapper.dart  # Route management
+│   └── screens/
+│       ├── login.dart         # Login screen
+│       ├── signup.dart        # Signup screen
+│       └── profile_setup.dart # Profile setup (existing)
+```
+
+---
+
+## 🏗️ **2. Models:**
+
+### **AppUser Model:**
+```dart
+// lib/models/app_user.dart
+class AppUser {
+  final String uid;
+  final String email;
+  final String username;
+  final String? imageUrl;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const AppUser({
+    required this.uid,
+    required this.email,
+    required this.username,
+    this.imageUrl,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  AppUser copyWith({
+    String? uid,
+    String? email,
+    String? username,
+    String? imageUrl,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return AppUser(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      imageUrl: imageUrl ?? this.imageUrl,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'email': email,
+      'username': username,
+      'imageUrl': imageUrl,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
+      uid: json['uid'] as String,
+      email: json['email'] as String,
+      username: json['username'] as String,
+      imageUrl: json['imageUrl'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  static AppUser empty() {
+    return AppUser(
+      uid: '',
+      email: '',
+      username: '',
+      imageUrl: null,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+}
+```
+
+### **Profile Model (existing - small update):**
+```dart
+// lib/models/profile.dart
+class Profile {
+  final String uid;           // ← Thêm uid reference
+  final String gender;
+  final int age;
+  final double height;
+  final double weight;
+
+  const Profile({
+    required this.uid,        // ← Thêm uid
+    required this.gender,
+    required this.age,
+    required this.height,
+    required this.weight,
+  });
+
+  // ...existing copyWith, toJson, fromJson methods
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,             // ← Thêm uid
+      'gender': gender,
+      'age': age,
+      'height': height,
+      'weight': weight,
+      'createdAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+  }
+
+  factory Profile.fromJson(Map<String, dynamic> json) {
+    return Profile(
+      uid: json['uid'] as String,    // ← Thêm uid
+      gender: json['gender'] as String,
+      age: json['age'] as int,
+      height: (json['height'] as num).toDouble(),
+      weight: (json['weight'] as num).toDouble(),
+    );
+  }
+
+  static Profile empty() {
+    return Profile(
+      uid: '',               // ← Thêm uid
+      gender: '',
+      age: 0,
+      height: 0,
+      weight: 0,
+    );
+  }
+}
+```
+
+---
+
+## 🔧 **3. Services:**
+
+### **AuthService:**
+```dart
+// lib/services/auth_service.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/app_user.dart';
+
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Get current user
+  User? get currentUser => _auth.currentUser;
+
+  // Auth state stream
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Sign up
+  Future<AppUser?> signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        final appUser = AppUser(
+          uid: credential.user!.uid,
+          email: email,
+          username: username,
+          imageUrl: null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        await _firestore
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(appUser.toJson());
+
+        return appUser;
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  // Sign in
+  Future<AppUser?> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        return await getUserData(credential.user!.uid);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  // Get user data
+  Future<AppUser?> getUserData(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return AppUser.fromJson(doc.data()!);
+      }
+    } catch (e) {
+      throw Exception('Failed to get user data: $e');
+    }
+    return null;
+  }
+
+  // Check if user has profile
+  Future<bool> hasProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('profiles').doc(uid).get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Handle exceptions
+  String _handleAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'Email không tồn tại';
+      case 'wrong-password':
+        return 'Mật khẩu không đúng';
+      case 'email-already-in-use':
+        return 'Email đã được sử dụng';
+      case 'weak-password':
+        return 'Mật khẩu quá yếu';
+      case 'invalid-email':
+        return 'Email không hợp lệ';
+      default:
+        return 'Đã xảy ra lỗi: ${e.message}';
+    }
+  }
+}
+
+// Provider
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+```
+
+---
+
+## 🎛️ **4. ViewModels:**
+
+### **AuthViewModel:**
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+import '../models/app_user.dart';
+import '../views/screens/profile_setup.dart';
+
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+
+  final AuthService _authService;
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    try {
+      final user = await _authService.signUp(
+        email: email,
+        password: password,
+        username: username,
+      );
+
+      state = AsyncValue.data(user);
+
+      if (user != null && context.mounted) {
+        // Navigate to profile setup
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+        );
+      }
+    } catch (e) {
+      state = AsyncValue.error(e.toString(), StackTrace.current);
+    }
+  }
+
+  Future<void> signIn({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    try {
+      final user = await _authService.signIn(
+        email: email,
+        password: password,
+      );
+
+      state = AsyncValue.data(user);
+
+      if (user != null && context.mounted) {
+        // AuthWrapper will handle navigation
+        Navigator.pushReplacementNamed(context, '/');
+      }
+    } catch (e) {
+      state = AsyncValue.error(e.toString(), StackTrace.current);
+    }
+  }
+
+  Future<void> signOut() async {
+    await _authService.signOut();
+    state = const AsyncValue.data(null);
+  }
+}
+
+// Provider
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)),
+);
+```
+
+### **ProfileViewModel (updated):**
+```dart
+// lib/viewmodels/profile_viewmodel.dart
+class ProfileViewModel extends StateNotifier<Profile> {
+  ProfileViewModel(this._authService) : super(Profile.empty());
+
+  final AuthService _authService;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // ...existing update methods...
+
+  Future<void> saveProfile(BuildContext context) async {
+    try {
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      final profileWithUid = state.copyWith(uid: user.uid);
+      
+      await _firestore
+          .collection('profiles')
+          .doc(user.uid)
+          .set(profileWithUid.toJson());
+
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
+    } catch (e) {
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi lưu thông tin: $e')),
+      );
+    }
+  }
+
+  Future<void> loadProfile() async {
+    try {
+      final user = _authService.currentUser;
+      if (user == null) return;
+
+      final doc = await _firestore.collection('profiles').doc(user.uid).get();
+      
+      if (doc.exists) {
+        state = Profile.fromJson(doc.data()!);
+      }
+    } catch (e) {
+      // Handle error
+    }
+  }
+}
+
+// Provider
+final profileViewModelProvider = StateNotifierProvider<ProfileViewModel, Profile>(
+  (ref) => ProfileViewModel(ref.read(authServiceProvider)),
+);
+```
+
+---
+
+## 🖥️ **5. Views:**
+
+### **AuthWrapper:**
+```dart
+// lib/views/widgets/auth_wrapper.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../screens/onboarding_screen.dart';
+import '../screens/profile_setup.dart';
+import '../screens/welcome_screen.dart';
+import '../screens/splash_screen.dart';
+
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+
+        final firebaseUser = snapshot.data;
+        
+        if (firebaseUser == null) {
+          return const OnboardingScreen();
+        }
+
+        return FutureBuilder<bool>(
+          future: _hasProfile(firebaseUser.uid),
+          builder: (context, profileSnapshot) {
+            if (profileSnapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            final hasProfile = profileSnapshot.data ?? false;
+            
+            if (hasProfile) {
+              // Load profile data
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(profileViewModelProvider.notifier).loadProfile();
+              });
+              return const WelcomeScreen();
+            } else {
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _hasProfile(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(uid)
+          .get();
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+```
+
+### **LoginScreen:**
+```dart
+// lib/views/screens/login.dart
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // UI components...
+                
+                TextFormField(
+                  controller: _emailController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email không hợp lệ';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập mật khẩu';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu',
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              authViewModel.signIn(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                                context: context,
+                              );
+                            }
+                          },
+                    child: authState.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Đăng nhập'),
+                  ),
+                ),
+                
+                // Error handling
+                if (authState.hasError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Text(
+                      authState.error.toString(),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### **SignupScreen:**
+```dart
+// lib/views/screens/signup.dart
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Username field
+                TextFormField(
+                  controller: _usernameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập tên người dùng';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Tên người dùng',
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Email field
+                TextFormField(
+                  controller: _emailController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email không hợp lệ';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Password field
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập mật khẩu';
+                    }
+                    if (value.length < 6) {
+                      return 'Mật khẩu phải có ít nhất 6 ký tự';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu',
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              authViewModel.signUp(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                                username: _usernameController.text.trim(),
+                                context: context,
+                              );
+                            }
+                          },
+                    child: authState.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Đăng ký'),
+                  ),
+                ),
+                
+                // Error handling
+                if (authState.hasError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Text(
+                      authState.error.toString(),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+---
+
+## 📦 **6. Dependencies:**
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  shared_preferences: ^2.2.2  # Cho draft profile
+```
+
+---
+
+## 🎯 **7. Main App Setup:**
+
+```dart
+// lib/main.dart
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'firebase_options.dart';
+import 'views/widgets/auth_wrapper.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  runApp(const ProviderScope(child: NutriPal()));
+}
+
+class NutriPal extends StatelessWidget {
+  const NutriPal({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'NutriPal',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: MaterialColor(0xFF92A3FD, {
+          50: Color(0xFFE8ECFE),
+          100: Color(0xFFD1D9FD),
+          200: Color(0xFFB9C6FC),
+          300: Color(0xFFA2B3FB),
+          400: Color(0xFF9AA9FA),
+          500: Color(0xFF92A3FD),
+          600: Color(0xFF7B8EFC),
+          700: Color(0xFF6479FB),
+          800: Color(0xFF4D64FA),
+          900: Color(0xFF364FF9),
+        }),
+        primaryColor: Color(0xFF92A3FD),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Color(0xFF92A3FD),
+          secondary: Color(0xFFC58BF2),
+        ),
+        useMaterial3: true,
+      ),
+      home: const AuthWrapper(),
+    );
+  }
+}
+```
+
+---
+
+## 🎯 **8. Firestore Database Structure:**
+
+```
+users/
+├── {uid}/
+│   ├── uid: "firebase_user_uid"
+│   ├── email: "user@example.com"
+│   ├── username: "john_doe"
+│   ├── imageUrl: null
+│   ├── createdAt: "2024-01-01T00:00:00.000Z"
+│   └── updatedAt: "2024-01-01T00:00:00.000Z"
+
+profiles/
+├── {uid}/
+│   ├── uid: "firebase_user_uid"
+│   ├── gender: "male"
+│   ├── age: 25
+│   ├── height: 175.0
+│   ├── weight: 70.0
+│   ├── createdAt: "2024-01-01T00:00:00.000Z"
+│   └── updatedAt: "2024-01-01T00:00:00.000Z"
+```
+
+---
+
+## 🔄 **9. User Flow:**
+
+1. **App Start** → AuthWrapper checks Firebase Auth
+2. **Not authenticated** → OnboardingScreen → Login/Signup
+3. **Signup** → Create user → Profile Setup → Welcome
+4. **Login** → Check profile exists → Profile Setup or Welcome
+5. **Profile incomplete** → Profile Setup (với draft data)
+6. **Profile complete** → Welcome/Main App
+
+---
+
+## ✅ **10. Lợi ích của phương án này:**
+
+1. **Simple & Clean**: Không over-engineer
+2. **Firebase Native**: Leverage Firebase Auth strengths
+3. **Scalable**: Dễ mở rộng features
+4. **User-friendly**: Handle edge cases (draft profile, etc.)
+5. **Maintainable**: Clear separation of concerns
+6. **Error handling**: Comprehensive error management
+
+Bạn có thắc mắc gì về implementation này không? 🚀
+
+---
+
+_**User**_
+
+tại sao authservice lại phải sử dụng thêm provider vậy
+
+---
+
+_**Assistant**_
+
+### 🤔 **Tại sao AuthService cần Provider?**
+
+### 🎯 **Lý do chính:**
+
+**1. Dependency Injection:**
+```dart
+// ❌ Không dùng Provider - Hard coupling
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  
+  final AuthService _authService = AuthService(); // ← Hard-coded dependency
+}
+
+// ✅ Dùng Provider - Flexible
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+  
+  final AuthService _authService; // ← Injected dependency
+}
+```
+
+**2. Singleton Pattern:**
+```dart
+// AuthService cần là singleton để:
+// - Tránh tạo multiple Firebase instances
+// - Share state across app
+// - Consistent authentication state
+
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+```
+
+**3. Testing & Mocking:**
+```dart
+// Có thể mock AuthService cho testing
+final authServiceProvider = Provider<AuthService>((ref) {
+  // In test environment
+  if (kTestMode) {
+    return MockAuthService();
+  }
+  return AuthService();
+});
+```
+
+---
+
+### 🚀 **Nhưng... thực ra có thể KHÔNG dùng Provider:**
+
+### **Cách 1: Direct instantiation (Đơn giản hơn)**
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+
+  final AuthService _authService = AuthService(); // ← Direct instance
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
+    // Same implementation...
+  }
+}
+
+// Provider không cần AuthService dependency
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(), // ← Không cần inject
+);
+```
+
+### **Cách 2: Static methods (Thậm chí đơn giản hơn)**
+```dart
+// lib/services/auth_service.dart
+class AuthService {
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Static methods
+  static User? get currentUser => _auth.currentUser;
+  static Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  static Future<AppUser?> signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    // Implementation...
+  }
+
+  static Future<AppUser?> signIn({
+    required String email,
+    required String password,
+  }) async {
+    // Implementation...
+  }
+}
+
+// Sử dụng trực tiếp
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  Future<void> signUp(...) async {
+    final user = await AuthService.signUp(...); // ← Direct call
+  }
+}
+```
+
+---
+
+### 📊 **So sánh các cách:**
+
+| Approach | Pros | Cons | Complexity |
+|----------|------|------|------------|
+| **With Provider** | ✅ Testable<br>✅ Flexible<br>✅ DI pattern | ❌ More setup<br>❌ Boilerplate | High |
+| **Direct Instance** | ✅ Simple<br>✅ Less code<br>✅ Straightforward | ❌ Hard to test<br>❌ Coupling | Medium |
+| **Static Methods** | ✅ Very simple<br>✅ No DI needed<br>✅ Fast | ❌ Hard to test<br>❌ Global state | Low |
+
+---
+
+### 🎯 **Recommendation cho NutriPal:**
+
+**Dùng Direct Instance approach:**
+```dart
+// lib/services/auth_service.dart
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  User? get currentUser => _auth.currentUser;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // All methods same as before...
+}
+
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+
+  final AuthService _authService = AuthService(); // ← Simple
+
+  // All methods same as before...
+}
+
+// lib/viewmodels/profile_viewmodel.dart
+class ProfileViewModel extends StateNotifier<Profile> {
+  ProfileViewModel() : super(Profile.empty());
+
+  final AuthService _authService = AuthService(); // ← Simple
+  
+  // All methods same as before...
+}
+
+// Providers
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(),
+);
+
+final profileViewModelProvider = StateNotifierProvider<ProfileViewModel, Profile>(
+  (ref) => ProfileViewModel(),
+);
+```
+
+---
+
+### 💡 **Lý do recommend Direct Instance:**
+
+**1. Cho dự án nhỏ/medium:**
+- ✅ Đơn giản, dễ hiểu
+- ✅ Ít boilerplate code
+- ✅ Nhanh implement
+- ✅ Đủ cho most use cases
+
+**2. AuthService tự nhiên là singleton:**
+- Firebase Auth instance đã là singleton
+- Firestore instance đã là singleton
+- Không cần complex DI setup
+
+**3. Testing vẫn possible:**
+```dart
+// Có thể override cho testing
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel({AuthService? authService}) 
+    : _authService = authService ?? AuthService(),
+      super(const AsyncValue.data(null));
+
+  final AuthService _authService;
+}
+```
+
+---
+
+### 🔧 **Kết luận:**
+
+**Cho NutriPal:**
+- ❌ Bỏ `authServiceProvider`
+- ✅ Dùng direct `AuthService()` instance
+- ✅ Giữ code đơn giản
+- ✅ Focus vào features thay vì architecture
+
+**Provider pattern hữu ích khi:**
+- Large enterprise apps
+- Complex testing requirements
+- Multiple implementations cần switch
+- Team có experience với DI
+
+**Nhưng cho học tập và dự án nhỏ:**
+- Direct instantiation là tốt nhất
+- Dễ hiểu và maintain
+- Ít complexity overhead
+
+Bạn muốn tôi update lại code theo cách đơn giản hơn không? 🎯
+
+---
+
+_**User**_
+
+ AuthViewModel(this._authService) dòng này là sao
+
+---
+
+_**Assistant**_
+
+### 🤔 **Giải thích `AuthViewModel(this._authService)`:**
+
+### **1. Dependency Injection Pattern:**
+
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+  //          ↑
+  //    Constructor parameter
+  
+  final AuthService _authService;
+  //    ↑
+  //    Private field để store instance
+}
+```
+
+### **2. Cách hoạt động:**
+
+**Dart Constructor Shorthand:**
+```dart
+// Cách viết dài
+AuthViewModel(AuthService authService) : super(const AsyncValue.data(null)) {
+  _authService = authService;
+}
+
+// Cách viết ngắn (shorthand)
+AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+```
+
+**Tương đương với:**
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  // Constructor nhận parameter và gán vào field
+  AuthViewModel(AuthService authService) : super(const AsyncValue.data(null)) {
+    _authService = authService;
+  }
+  
+  final AuthService _authService;
+}
+```
+
+### **3. Sử dụng với Provider:**
+
+```dart
+// Provider sẽ inject AuthService vào AuthViewModel
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)),
+  //                    ↑
+  //              Pass AuthService instance
+);
+```
+
+### **4. Flow hoạt động:**
+
+```
+1. Provider tạo AuthService instance
+2. Provider pass AuthService vào AuthViewModel constructor
+3. AuthViewModel nhận và lưu vào _authService field
+4. AuthViewModel sử dụng _authService để call methods
+```
+
+### **5. Ví dụ cụ thể:**
+
+```dart
+// AuthService
+class AuthService {
+  Future<User?> signIn(String email, String password) async {
+    // Firebase logic
+  }
+}
+
+// AuthViewModel
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+  
+  final AuthService _authService;
+  
+  Future<void> signIn(String email, String password) async {
+    // Sử dụng _authService được inject
+    final user = await _authService.signIn(email, password);
+  }
+}
+
+// Provider setup
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)),
+  //                    ↑ Inject AuthService
+);
+```
+
+---
+
+### 🎯 **Tại sao không dùng cách đơn giản hơn?**
+
+**Như tôi đã đề xuất trước:**
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  
+  final AuthService _authService = AuthService(); // ← Direct instance
+}
+```
+
+**Vì cách này:**
+- ✅ Đơn giản hơn
+- ✅ Ít code hơn
+- ✅ Không cần dependency injection
+- ✅ Phù hợp cho dự án nhỏ/medium
+
+---
+
+### 💡 **Kết luận:**
+
+**`AuthViewModel(this._authService)` là:**
+- Constructor nhận AuthService parameter
+- Gán parameter vào private field `_authService`
+- Dart shorthand syntax
+- Dependency injection pattern
+
+**Nhưng cho NutriPal, tôi recommend:**
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  
+  final AuthService _authService = AuthService(); // ← Đơn giản hơn
+}
+```
+
+Bạn có hiểu rõ về dependency injection này chưa? 🚀
+
+---
+
+_**User**_
+
+tức là dòng này khả thi khi có provider cho authservice đúng không
+
+---
+
+_**Assistant**_
+
+### ✅ **Đúng rồi!**
+
+### **`AuthViewModel(this._authService)` chỉ khả thi khi có Provider cho AuthService:**
+
+```dart
+// ✅ CẦN CÓ Provider cho AuthService trước
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
+// ✅ Thì mới dùng được constructor injection
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)),
+  //                    ↑ Inject AuthService từ provider
+);
+```
+
+### **❌ Nếu KHÔNG có authServiceProvider:**
+
+```dart
+// ❌ Không có authServiceProvider
+// final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)), // ← LỖI! authServiceProvider không tồn tại
+);
+```
+
+### **📊 Hai cách tiếp cận:**
+
+**Cách 1: WITH Provider (Dependency Injection):**
+```dart
+// Step 1: Tạo AuthService Provider
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
+// Step 2: AuthViewModel nhận AuthService qua constructor
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel(this._authService) : super(const AsyncValue.data(null));
+  final AuthService _authService;
+}
+
+// Step 3: Inject AuthService vào AuthViewModel
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(ref.read(authServiceProvider)),
+);
+```
+
+**Cách 2: WITHOUT Provider (Direct Instance):**
+```dart
+// Không cần AuthService Provider
+
+// AuthViewModel tự tạo AuthService instance
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  final AuthService _authService = AuthService(); // ← Direct instance
+}
+
+// Provider đơn giản
+final authViewModelProvider = StateNotifierProvider<AuthViewModel, AsyncValue<AppUser?>>(
+  (ref) => AuthViewModel(),
+);
+```
+
+### **🎯 Tóm tắt:**
+
+- **`AuthViewModel(this._authService)`** = Constructor injection
+- **CHỈ hoạt động** khi có `authServiceProvider`
+- **Phụ thuộc vào** Riverpod dependency injection
+- **Nếu không muốn dùng Provider** → Dùng direct instance
+
+### **💡 Recommendation:**
+
+Cho NutriPal, tôi vẫn recommend **Cách 2** (direct instance) vì:
+- ✅ Đơn giản hơn
+- ✅ Ít dependency
+- ✅ Dễ hiểu
+- ✅ Đủ cho project này
+
+```dart
+// Đơn giản và hiệu quả
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  final AuthService _authService = AuthService();
+}
+```
+
+Bạn có muốn tôi update lại code theo cách đơn giản hơn không? 🚀
+
+---
+
+_**User**_
+
+StateNotifier<AsyncValue<AppUser?>>, tại sao khi không dùng asyncnotifier
+
+---
+
+_**Assistant**_
+
+### 🤔 **Tại sao dùng `StateNotifier<AsyncValue<AppUser?>>` thay vì `AsyncNotifier`?**
+
+### **1. So sánh hai cách:**
+
+**Cách hiện tại - StateNotifier + AsyncValue:**
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  AuthViewModel() : super(const AsyncValue.data(null));
+  
+  Future<void> signIn(String email, String password) async {
+    state = const AsyncValue.loading();  // ← Manual loading state
+    
+    try {
+      final user = await _authService.signIn(email, password);
+      state = AsyncValue.data(user);     // ← Manual success state
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current); // ← Manual error state
+    }
+  }
+}
+```
+
+**Cách với AsyncNotifier:**
+```dart
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  @override
+  Future<AppUser?> build() async {
+    return null; // Initial state
+  }
+  
+  Future<void> signIn(String email, String password) async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      return await _authService.signIn(email, password);
+    });
+  }
+}
+```
+
+---
+
+### **2. Lý do chọn StateNotifier<AsyncValue>:**
+
+**A. Tính tương thích:**
+```dart
+// StateNotifier có từ lâu, stable
+// AsyncNotifier mới hơn (Riverpod 2.x)
+// StateNotifier<AsyncValue> là pattern phổ biến
+```
+
+**B. Linh hoạt hơn:**
+```dart
+class AuthViewModel extends StateNotifier<AsyncValue<AppUser?>> {
+  // Có thể handle nhiều async operations
+  Future<void> signIn(...) async { /* ... */ }
+  Future<void> signUp(...) async { /* ... */ }
+  Future<void> signOut() async { /* ... */ }
+  
+  // Có thể có sync operations
+  void clearError() {
+    if (state.hasError) {
+      state = const AsyncValue.data(null);
+    }
+  }
+}
+```
+
+**C. Kiểm soát state tốt hơn:**
+```dart
+Future<void> signIn(String email, String password) async {
+  state = const AsyncValue.loading();
+  
+  try {
+    final user = await _authService.signIn(email, password);
+    state = AsyncValue.data(user);
+    
+    // Có thể thêm logic khác
+    if (user != null) {
+      // Navigate, analytics, etc.
+    }
+  } catch (e) {
+    state = AsyncValue.error(e, StackTrace.current);
+    // Custom error handling
+  }
+}
+```
+
+---
+
+### **3. Tuy nhiên, AsyncNotifier cũng có lợi ích:**
+
+**A. Tự động handle async:**
+```dart
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  @override
+  Future<AppUser?> build() async {
+    // Auto loading state
+    return await _authService.getCurrentUser();
+  }
+  
+  Future<void> signIn(String email, String password) async {
+    state = await AsyncValue.guard(() async {
+      return await _authService.signIn(email, password);
+    });
+  }
+}
+```
+
+**B. Ít boilerplate:**
+```dart
+// Không cần manually set loading/error states
+state = await AsyncValue.guard(() async {
+  return await someAsyncOperation();
+});
+```
+
+---
+
+### **4. Recommendation cho NutriPal:**
+
+### **Có thể dùng StateNotifier đơn giản hơn:**
+
+```dart
+class AuthViewModel extends StateNotifier<AppUser?> {
+  AuthViewModel() : super(null);
+  
+  bool _isLoading = false;
+  String? _errorMessage;
+  
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  
+  Future<void> signIn(String email, String password) async {
+    _isLoading = true;
+    _errorMessage = null;
+    state = state; // Trigger rebuild
+    
+    try {
+      final user = await _authService.signIn(email, password);
+      state = user;
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+    }
+  }
+}
+```
+
+### **Hoặc dùng AsyncNotifier cho cleaner code:**
+
+```dart
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  @override
+  Future<AppUser?> build() async {
+    return null; // Initial state
+  }
+  
+  Future<void> signIn(String email, String password) async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      return await _authService.signIn(email, password);
+    });
+  }
+  
+  Future<void> signUp(String email, String password, String username) async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      return await _authService.signUp(email: email, password: password, username: username);
+    });
+  }
+}
+
+// Provider
+final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, AppUser?>(
+  () => AuthViewModel(),
+);
+```
+
+---
+
+### **5. UI Usage comparison:**
+
+**With StateNotifier<AsyncValue>:**
+```dart
+final authState = ref.watch(authViewModelProvider);
+
+return authState.when(
+  data: (user) => Text('Welcome ${user?.username}'),
+  loading: () => CircularProgressIndicator(),
+  error: (error, _) => Text('Error: $error'),
+);
+```
+
+**With AsyncNotifier:**
+```dart
+final authState = ref.watch(authViewModelProvider);
+
+return authState.when(
+  data: (user) => Text('Welcome ${user?.username}'),
+  loading: () => CircularProgressIndicator(),
+  error: (error, _) => Text('Error: $error'),
+);
+```
+
+---
+
+### **🎯 Kết luận:**
+
+**Cho NutriPal, tôi recommend `AsyncNotifier`:**
+- ✅ Cleaner code
+- ✅ Less boilerplate
+- ✅ Modern approach
+- ✅ Built-in async handling
+
+```dart
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  @override
+  Future<AppUser?> build() async => null;
+  
+  Future<void> signIn(String email, String password) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _authService.signIn(email: email, password: password));
+  }
+}
+```
+
+Bạn muốn tôi update code theo `AsyncNotifier` không? 🚀
+
+---
+
+_**User**_
+
+đổi lại thành asyncnotifier
+
+---
+
+_**Assistant**_
+
+### 🚀 **Updated với AsyncNotifier:**
+
+## 🎛️ **1. AuthViewModel với AsyncNotifier:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+import '../models/app_user.dart';
+import '../views/screens/profile_setup.dart';
+
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  final AuthService _authService = AuthService();
+
+  @override
+  Future<AppUser?> build() async {
+    // Initial state - check if user is already logged in
+    final currentUser = _authService.currentUser;
+    if (currentUser != null) {
+      return await _authService.getUserData(currentUser.uid);
+    }
+    return null;
+  }
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.signUp(
+        email: email,
+        password: password,
+        username: username,
+      );
+
+      if (user != null && context.mounted) {
+        // Navigate to profile setup
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+        );
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> signIn({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.signIn(
+        email: email,
+        password: password,
+      );
+
+      if (user != null && context.mounted) {
+        // AuthWrapper will handle navigation
+        Navigator.pushReplacementNamed(context, '/');
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> signOut() async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      await _authService.signOut();
+      return null;
+    });
+  }
+}
+
+// Provider với AsyncNotifier
+final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, AppUser?>(
+  () => AuthViewModel(),
+);
+```
+
+## 🎛️ **2. ProfileViewModel với AsyncNotifier:**
+
+```dart
+// lib/viewmodels/profile_viewmodel.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
+import '../models/profile.dart';
+import '../views/screens/welcome_screen.dart';
+
+class ProfileViewModel extends AsyncNotifier<Profile> {
+  final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  Future<Profile> build() async {
+    // Load existing profile if any
+    final user = _authService.currentUser;
+    if (user != null) {
+      try {
+        final doc = await _firestore.collection('profiles').doc(user.uid).get();
+        if (doc.exists) {
+          return Profile.fromJson(doc.data()!);
+        }
+      } catch (e) {
+        // If error, return empty profile
+      }
+    }
+    return Profile.empty();
+  }
+
+  // Sync methods for UI updates (không cần async)
+  void updateGender(String gender) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(gender: gender));
+  }
+
+  void updateAge(String ageStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    int age = int.tryParse(ageStr) ?? 0;
+    state = AsyncValue.data(currentProfile.copyWith(age: age));
+  }
+
+  void updateHeight(String heightStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    double height = double.tryParse(heightStr) ?? 0.0;
+    state = AsyncValue.data(currentProfile.copyWith(height: height));
+  }
+
+  void updateWeight(String weightStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    double weight = double.tryParse(weightStr) ?? 0.0;
+    state = AsyncValue.data(currentProfile.copyWith(weight: weight));
+  }
+
+  // Validation methods
+  String? validateAge(String? ageStr) {
+    if (ageStr == null || ageStr.isEmpty) return "Vui lòng nhập tuổi";
+    final age = int.tryParse(ageStr);
+    if (age == null || age < 13 || age > 100) {
+      return "Tuổi phải từ 13-100";
+    }
+    return null;
+  }
+
+  String? validateHeight(String? heightStr) {
+    if (heightStr == null || heightStr.isEmpty) return "Vui lòng nhập chiều cao";
+    final height = double.tryParse(heightStr);
+    if (height == null || height < 100 || height > 250) {
+      return "Chiều cao phải từ 100-250cm";
+    }
+    return null;
+  }
+
+  String? validateWeight(String? weightStr) {
+    if (weightStr == null || weightStr.isEmpty) return "Vui lòng nhập cân nặng";
+    final weight = double.tryParse(weightStr);
+    if (weight == null || weight < 30 || weight > 200) {
+      return "Cân nặng phải từ 30-200kg";
+    }
+    return null;
+  }
+
+  // Async method for saving profile
+  Future<void> saveProfile(BuildContext context) async {
+    final currentProfile = state.valueOrNull;
+    if (currentProfile == null || !currentProfile.isValid) {
+      return;
+    }
+
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      final profileWithUid = currentProfile.copyWith(uid: user.uid);
+      
+      await _firestore
+          .collection('profiles')
+          .doc(user.uid)
+          .set(profileWithUid.toJson());
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      }
+
+      return profileWithUid;
+    });
+  }
+}
+
+// Provider với AsyncNotifier
+final profileViewModelProvider = AsyncNotifierProvider<ProfileViewModel, Profile>(
+  () => ProfileViewModel(),
+);
+```
+
+## 🖥️ **3. Updated UI Screens:**
+
+### **LoginScreen:**
+```dart
+// lib/views/screens/login.dart
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Đăng nhập',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
+                
+                TextFormField(
+                  controller: _emailController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email không hợp lệ';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập mật khẩu';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              authViewModel.signIn(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                                context: context,
+                              );
+                            }
+                          },
+                    child: authState.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Đăng nhập'),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Error handling với AsyncValue
+                authState.when(
+                  data: (_) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, _) => Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            error.toString(),
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/signup');
+                  },
+                  child: const Text('Chưa có tài khoản? Đăng ký'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### **SignupScreen:**
+```dart
+// lib/views/screens/signup.dart
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Đăng ký',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
+                
+                TextFormField(
+                  controller: _usernameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập tên người dùng';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Tên người dùng',
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _emailController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email không hợp lệ';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập mật khẩu';
+                    }
+                    if (value.length < 6) {
+                      return 'Mật khẩu phải có ít nhất 6 ký tự';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              authViewModel.signUp(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                                username: _usernameController.text.trim(),
+                                context: context,
+                              );
+                            }
+                          },
+                    child: authState.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Đăng ký'),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Error handling với AsyncValue
+                authState.when(
+                  data: (_) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, _) => Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            error.toString(),
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  child: const Text('Đã có tài khoản? Đăng nhập'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### **ProfileSetupScreen (updated):**
+```dart
+// lib/views/screens/profile_setup.dart
+class ProfileSetupScreen extends ConsumerStatefulWidget {
+  const ProfileSetupScreen({super.key});
+
+  @override
+  ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+}
+
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _ageController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final profileState = ref.watch(profileViewModelProvider);
+    final profileViewModel = ref.read(profileViewModelProvider.notifier);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Thông tin cơ bản"),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Gender selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Giới tính",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => profileViewModel.updateGender("male"),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: profileState.valueOrNull?.gender == "male"
+                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: profileState.valueOrNull?.gender == "male"
+                                      ? Theme.of(context).primaryColor
+                                      : Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.male,
+                                    color: profileState.valueOrNull?.gender == "male"
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Nam",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: profileState.valueOrNull?.gender == "male"
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => profileViewModel.updateGender("female"),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: profileState.valueOrNull?.gender == "female"
+                                    ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: profileState.valueOrNull?.gender == "female"
+                                      ? Theme.of(context).colorScheme.secondary
+                                      : Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.female,
+                                    color: profileState.valueOrNull?.gender == "female"
+                                        ? Theme.of(context).colorScheme.secondary
+                                        : Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Nữ",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: profileState.valueOrNull?.gender == "female"
+                                          ? Theme.of(context).colorScheme.secondary
+                                          : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Age, Height, Weight form fields
+                TextFormField(
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  validator: profileViewModel.validateAge,
+                  decoration: const InputDecoration(
+                    labelText: "Tuổi",
+                    prefixIcon: Icon(Icons.cake),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _heightController,
+                  keyboardType: TextInputType.number,
+                  validator: profileViewModel.validateHeight,
+                  decoration: const InputDecoration(
+                    labelText: "Chiều cao (cm)",
+                    prefixIcon: Icon(Icons.height),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                TextFormField(
+                  controller: _weightController,
+                  keyboardType: TextInputType.number,
+                  validator: profileViewModel.validateWeight,
+                  decoration: const InputDecoration(
+                    labelText: "Cân nặng (kg)",
+                    prefixIcon: Icon(Icons.monitor_weight),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: profileState.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              // Update profile with form data
+                              profileViewModel.updateAge(_ageController.text);
+                              profileViewModel.updateHeight(_heightController.text);
+                              profileViewModel.updateWeight(_weightController.text);
+                              
+                              // Save profile
+                              profileViewModel.saveProfile(context);
+                            }
+                          },
+                    child: profileState.isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Hoàn thành'),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Error handling
+                profileState.when(
+                  data: (_) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, _) => Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            error.toString(),
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## 🔧 **4. Updated AuthWrapper:**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    
+    return authState.when(
+      data: (user) {
+        if (user == null) {
+          return const OnboardingScreen();
+        }
+        
+        // User is authenticated, check profile
+        return FutureBuilder<bool>(
+          future: AuthService().hasProfile(user.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+            
+            final hasProfile = snapshot.data ?? false;
+            
+            if (hasProfile) {
+              return const WelcomeScreen();
+            } else {
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+      loading: () => const SplashScreen(),
+      error: (error, _) => const OnboardingScreen(),
+    );
+  }
+}
+```
+
+## ✅ **5. Key Changes với AsyncNotifier:**
+
+1. **Cleaner State Management**: `AsyncValue.guard()` automatically handles loading/error states
+2. **Less Boilerplate**: No manual state setting for loading/error
+3. **Better Error Handling**: Built-in error handling with `AsyncValue`
+4. **Improved UI**: `.when()` method for clean UI state handling
+5. **Modern Approach**: Latest Riverpod patterns
+
+## 🎯 **6. Benefits:**
+
+- ✅ **Automatic loading states**: No manual loading management
+- ✅ **Built-in error handling**: AsyncValue handles errors gracefully
+- ✅ **Cleaner UI code**: `.when()` method for state-based UI
+- ✅ **Less boilerplate**: AsyncValue.guard() simplifies async operations
+- ✅ **Better user experience**: Consistent loading/error states
+
+Bạn có thấy cách này clean và dễ hiểu hơn không? 🚀
+
+---
+
+_**User**_
+
+ở signupscreen tại sao phải cần final authState = ref.watch(authViewModelProvider);
+
+---
+
+_**Assistant**_
+
+### 🤔 **Tại sao cần `final authState = ref.watch(authViewModelProvider)` trong SignupScreen?**
+
+### **1. Mục đích của `ref.watch()`:**
+
+**A. Lắng nghe state changes:**
+```dart
+final authState = ref.watch(authViewModelProvider);
+// ↑ Widget sẽ rebuild khi authState thay đổi
+```
+
+**B. Hiển thị UI theo state:**
+```dart
+// Loading state
+child: authState.isLoading
+    ? const CircularProgressIndicator()
+    : const Text('Đăng ký'),
+
+// Error state
+authState.when(
+  data: (_) => const SizedBox.shrink(),
+  loading: () => const SizedBox.shrink(),
+  error: (error, _) => Text(error.toString()),
+),
+```
+
+### **2. Flow hoạt động:**
+
+```
+1. User tap "Đăng ký" button
+2. authViewModel.signUp() được gọi
+3. authState thay đổi: data → loading → data/error
+4. UI rebuild để hiển thị loading/error states
+5. Button disable khi loading, hiện error nếu có
+```
+
+### **3. Nếu KHÔNG dùng `ref.watch()` sẽ ra sao?**
+
+```dart
+// ❌ Không watch state
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    // Không có authState
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+    
+    return ElevatedButton(
+      onPressed: () {
+        authViewModel.signUp(...); // Gọi signup
+      },
+      child: const Text('Đăng ký'), // ← Luôn hiển thị text này
+    );
+  }
+}
+```
+
+**❌ Vấn đề:**
+- Button không disable khi loading
+- Không hiển thị loading indicator
+- Không show error messages
+- User có thể tap multiple times
+- Poor user experience
+
+### **4. Các cách tiếp cận khác:**
+
+**Cách 1: Local state management:**
+```dart
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+    
+    return Column(
+      children: [
+        ElevatedButton(
+          onPressed: _isLoading ? null : () async {
+            setState(() {
+              _isLoading = true;
+              _errorMessage = null;
+            });
+            
+            try {
+              await authViewModel.signUp(...);
+            } catch (e) {
+              setState(() {
+                _errorMessage = e.toString();
+              });
+            } finally {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+          child: _isLoading 
+              ? const CircularProgressIndicator()
+              : const Text('Đăng ký'),
+        ),
+        
+        if (_errorMessage != null)
+          Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+      ],
+    );
+  }
+}
+```
+
+**❌ Vấn đề với cách này:**
+- Duplicate state management
+- More boilerplate code
+- Manual error handling
+- State không sync với ViewModel
+
+### **5. Cách tối ưu - Chỉ watch khi cần:**
+
+```dart
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+    
+    return Column(
+      children: [
+        // Form fields...
+        
+        // Chỉ watch khi cần hiển thị loading/error
+        Consumer(
+          builder: (context, ref, child) {
+            final authState = ref.watch(authViewModelProvider);
+            
+            return Column(
+              children: [
+                ElevatedButton(
+                  onPressed: authState.isLoading
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            authViewModel.signUp(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
+                              username: _usernameController.text.trim(),
+                              context: context,
+                            );
+                          }
+                        },
+                  child: authState.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Đăng ký'),
+                ),
+                
+                // Error display
+                authState.when(
+                  data: (_) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, _) => Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+```
+
+### **6. Tại sao approach hiện tại tốt:**
+
+**✅ Advantages:**
+- **Reactive UI**: Tự động update theo state
+- **Consistent UX**: Loading/error states được handle
+- **Less code**: Không cần manual state management
+- **Centralized logic**: State logic ở ViewModel
+- **Easy to maintain**: Single source of truth
+
+**✅ User Experience:**
+- Button disable khi loading
+- Loading indicator hiển thị
+- Error messages clear
+- Prevent multiple submissions
+- Smooth interactions
+
+### **7. Kết luận:**
+
+**`ref.watch(authViewModelProvider)` cần thiết để:**
+1. **Listen to state changes** từ ViewModel
+2. **Update UI accordingly** (loading, error, success)
+3. **Provide good UX** với loading states
+4. **Handle errors gracefully** với error messages
+5. **Prevent duplicate actions** khi loading
+
+**Không thể bỏ vì:**
+- UI sẽ không biết khi nào loading/error
+- User experience sẽ rất tệ
+- Không thể disable button khi processing
+
+Bạn có hiểu rõ về reactive programming với Riverpod chưa? 🚀
+
+---
+
+_**User**_
+
+với các hàm validator của từng textformfield trong signupscreen, có cần phải tách riêng ra thành 1 viewmodel riêng không
+
+---
+
+_**Assistant**_
+
+### 🤔 **Validator functions có cần tách riêng ViewModel không?**
+
+### **📊 So sánh các approaches:**
+
+## **1. Approach hiện tại - Inline validators:**
+
+```dart
+// lib/views/screens/signup.dart
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _usernameController,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập tên người dùng';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(labelText: 'Tên người dùng'),
+        ),
+        
+        TextFormField(
+          controller: _emailController,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập email';
+            }
+            if (!value.contains('@')) {
+              return 'Email không hợp lệ';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        
+        TextFormField(
+          controller: _passwordController,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập mật khẩu';
+            }
+            if (value.length < 6) {
+              return 'Mật khẩu phải có ít nhất 6 ký tự';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(labelText: 'Mật khẩu'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## **2. Approach 1 - Tách ra ValidationViewModel:**
+
+```dart
+// lib/viewmodels/validation_viewmodel.dart
+class ValidationViewModel {
+  static String? validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập tên người dùng';
+    }
+    if (value.length < 3) {
+      return 'Tên người dùng phải có ít nhất 3 ký tự';
+    }
+    if (value.length > 20) {
+      return 'Tên người dùng không được quá 20 ký tự';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+      return 'Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới';
+    }
+    return null;
+  }
+
+  static String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập email';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+      return 'Email không hợp lệ';
+    }
+    return null;
+  }
+
+  static String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập mật khẩu';
+    }
+    if (value.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (value.length > 50) {
+      return 'Mật khẩu không được quá 50 ký tự';
+    }
+    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+      return 'Mật khẩu phải có ít nhất 1 chữ thường, 1 chữ hoa và 1 số';
+    }
+    return null;
+  }
+
+  static String? validateConfirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng xác nhận mật khẩu';
+    }
+    if (value != password) {
+      return 'Mật khẩu xác nhận không khớp';
+    }
+    return null;
+  }
+}
+
+// Sử dụng trong SignupScreen
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _usernameController,
+          validator: ValidationViewModel.validateUsername,
+          decoration: const InputDecoration(labelText: 'Tên người dùng'),
+        ),
+        
+        TextFormField(
+          controller: _emailController,
+          validator: ValidationViewModel.validateEmail,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        
+        TextFormField(
+          controller: _passwordController,
+          validator: ValidationViewModel.validatePassword,
+          decoration: const InputDecoration(labelText: 'Mật khẩu'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## **3. Approach 2 - Tích hợp vào AuthViewModel:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends AsyncNotifier<AppUser?> {
+  final AuthService _authService = AuthService();
+
+  @override
+  Future<AppUser?> build() async {
+    // ...existing code...
+  }
+
+  // Validation methods
+  String? validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập tên người dùng';
+    }
+    if (value.length < 3) {
+      return 'Tên người dùng phải có ít nhất 3 ký tự';
+    }
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập email';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+      return 'Email không hợp lệ';
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập mật khẩu';
+    }
+    if (value.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    return null;
+  }
+
+  // ...existing signUp, signIn methods...
+}
+
+// Sử dụng trong SignupScreen
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+    
+    return Column(
+      children: [
+        TextFormField(
+          controller: _usernameController,
+          validator: authViewModel.validateUsername,
+          decoration: const InputDecoration(labelText: 'Tên người dùng'),
+        ),
+        
+        TextFormField(
+          controller: _emailController,
+          validator: authViewModel.validateEmail,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        
+        TextFormField(
+          controller: _passwordController,
+          validator: authViewModel.validatePassword,
+          decoration: const InputDecoration(labelText: 'Mật khẩu'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## **4. Approach 3 - Validation Service (Recommended):**
+
+```dart
+// lib/services/validation_service.dart
+class ValidationService {
+  static String? validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập tên người dùng';
+    }
+    if (value.length < 3) {
+      return 'Tên người dùng phải có ít nhất 3 ký tự';
+    }
+    if (value.length > 20) {
+      return 'Tên người dùng không được quá 20 ký tự';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+      return 'Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới';
+    }
+    return null;
+  }
+
+  static String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập email';
+    }
+    
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Email không hợp lệ';
+    }
+    
+    return null;
+  }
+
+  static String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập mật khẩu';
+    }
+    if (value.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (value.length > 50) {
+      return 'Mật khẩu không được quá 50 ký tự';
+    }
+    
+    // Optional: Strong password validation
+    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+      return 'Mật khẩu phải có ít nhất 1 chữ thường, 1 chữ hoa và 1 số';
+    }
+    
+    return null;
+  }
+
+  static String? validateConfirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng xác nhận mật khẩu';
+    }
+    if (value != password) {
+      return 'Mật khẩu xác nhận không khớp';
+    }
+    return null;
+  }
+
+  // Profile validation methods
+  static String? validateAge(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập tuổi';
+    }
+    final age = int.tryParse(value);
+    if (age == null || age < 13 || age > 100) {
+      return 'Tuổi phải từ 13-100';
+    }
+    return null;
+  }
+
+  static String? validateHeight(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập chiều cao';
+    }
+    final height = double.tryParse(value);
+    if (height == null || height < 100 || height > 250) {
+      return 'Chiều cao phải từ 100-250cm';
+    }
+    return null;
+  }
+
+  static String? validateWeight(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập cân nặng';
+    }
+    final weight = double.tryParse(value);
+    if (weight == null || weight < 30 || weight > 200) {
+      return 'Cân nặng phải từ 30-200kg';
+    }
+    return null;
+  }
+}
+
+// Sử dụng trong SignupScreen
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _usernameController,
+          validator: ValidationService.validateUsername,
+          decoration: const InputDecoration(labelText: 'Tên người dùng'),
+        ),
+        
+        TextFormField(
+          controller: _emailController,
+          validator: ValidationService.validateEmail,
+          decoration: const InputDecoration(labelText: 'Email'),
+        ),
+        
+        TextFormField(
+          controller: _passwordController,
+          validator: ValidationService.validatePassword,
+          decoration: const InputDecoration(labelText: 'Mật khẩu'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## **📊 So sánh các approaches:**
+
+| Approach | Pros | Cons | Use Case |
+|----------|------|------|----------|
+| **Inline** | ✅ Simple<br>✅ Fast implement | ❌ Code duplication<br>❌ Hard to maintain | Small apps |
+| **ValidationViewModel** | ✅ Reusable<br>✅ Testable | ❌ Overkill for simple validation<br>❌ Extra complexity | Complex validation logic |
+| **In AuthViewModel** | ✅ Related to auth<br>✅ Centralized | ❌ Mixed responsibilities<br>❌ Violates SRP | Simple auth apps |
+| **ValidationService** | ✅ Reusable<br>✅ Clean separation<br>✅ Easy to test<br>✅ Consistent | ✅ Perfect balance | **Recommended** |
+
+## **🎯 Recommendation cho NutriPal:**
+
+### **Dùng ValidationService approach:**
+
+```dart
+// lib/services/validation_service.dart
+class ValidationService {
+  // Auth validations
+  static String? validateUsername(String? value) { /* ... */ }
+  static String? validateEmail(String? value) { /* ... */ }
+  static String? validatePassword(String? value) { /* ... */ }
+  
+  // Profile validations
+  static String? validateAge(String? value) { /* ... */ }
+  static String? validateHeight(String? value) { /* ... */ }
+  static String? validateWeight(String? value) { /* ... */ }
+}
+```
+
+### **Lý do:**
+1. **✅ Reusable**: Dùng được ở nhiều screens (Login, Signup, Profile)
+2. **✅ Testable**: Dễ viết unit tests
+3. **✅ Maintainable**: Centralized validation logic
+4. **✅ Clean separation**: Tách biệt validation khỏi UI và business logic
+5. **✅ Consistent**: Consistent validation rules across app
+6. **✅ Extensible**: Dễ thêm validation rules mới
+
+### **Cập nhật ProfileViewModel:**
+
+```dart
+// lib/viewmodels/profile_viewmodel.dart
+class ProfileViewModel extends AsyncNotifier<Profile> {
+  // Remove validation methods, use ValidationService instead
+  
+  // Keep only business logic
+  void updateGender(String gender) { /* ... */ }
+  void updateAge(String ageStr) { /* ... */ }
+  Future<void> saveProfile(BuildContext context) async { /* ... */ }
+}
+```
+
+## **✅ Kết luận:**
+
+**Cho NutriPal:**
+- ✅ **Tách validation ra ValidationService**
+- ✅ **Static methods** cho performance
+- ✅ **Reuse across screens**
+- ✅ **Easy to test và maintain**
+- ❌ **Không cần ValidationViewModel** (overkill)
+
+Bạn muốn tôi implement ValidationService đầy đủ không? 🚀
+
+---
+
+_**User**_
+
+tại sao trong profile_viewmodel không sử dụng asyncvalue.guard cho các hàm update
+
+---
+
+_**Assistant**_
+
+### 🤔 **Tại sao các hàm update trong ProfileViewModel không dùng AsyncValue.guard?**
+
+### **1. Phân biệt Sync vs Async operations:**
+
+**Sync operations (không cần AsyncValue.guard):**
+```dart
+// Chỉ update local state, không có async operation
+void updateGender(String gender) {
+  final currentProfile = state.valueOrNull ?? Profile.empty();
+  state = AsyncValue.data(currentProfile.copyWith(gender: gender));
+  // ↑ Instant operation, không cần try-catch
+}
+
+void updateAge(String ageStr) {
+  final currentProfile = state.valueOrNull ?? Profile.empty();
+  int age = int.tryParse(ageStr) ?? 0;
+  state = AsyncValue.data(currentProfile.copyWith(age: age));
+  // ↑ Parsing và copyWith là sync, không throw exception
+}
+```
+
+**Async operations (cần AsyncValue.guard):**
+```dart
+// Có network call, file I/O, database operation
+Future<void> saveProfile(BuildContext context) async {
+  state = await AsyncValue.guard(() async {
+    final user = _authService.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    await _firestore.collection('profiles').doc(user.uid).set(...);
+    // ↑ Async operation, có thể throw exception
+    
+    return profileWithUid;
+  });
+}
+```
+
+### **2. Khi nào cần AsyncValue.guard:**
+
+**✅ Cần khi:**
+- Network requests
+- File operations
+- Database operations
+- Any operation có thể throw exception
+- Operations có thể mất thời gian
+
+**❌ Không cần khi:**
+- Simple data transformation
+- Local state updates
+- Parsing operations (với proper null handling)
+- Instant operations
+
+### **3. Tuy nhiên, có thể cải thiện:**
+
+**Current approach:**
+```dart
+void updateAge(String ageStr) {
+  final currentProfile = state.valueOrNull ?? Profile.empty();
+  int age = int.tryParse(ageStr) ?? 0;
+  state = AsyncValue.data(currentProfile.copyWith(age: age));
+}
+```
+
+**Improved approach với validation:**
+```dart
+void updateAge(String ageStr) {
+  try {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    
+    // Validate input
+    final validationError = ValidationService.validateAge(ageStr);
+    if (validationError != null) {
+      state = AsyncValue.error(validationError, StackTrace.current);
+      return;
+    }
+    
+    int age = int.parse(ageStr); // Safe to parse after validation
+    state = AsyncValue.data(currentProfile.copyWith(age: age));
+  } catch (e) {
+    state = AsyncValue.error('Invalid age: $e', StackTrace.current);
+  }
+}
+```
+
+### **4. Hoặc dùng AsyncValue.guard cho consistency:**
+
+```dart
+// lib/viewmodels/profile_viewmodel.dart
+class ProfileViewModel extends AsyncNotifier<Profile> {
+  // Option 1: Sync updates (current approach)
+  void updateGender(String gender) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(gender: gender));
+  }
+
+  // Option 2: Async updates với validation
+  Future<void> updateAge(String ageStr) async {
+    state = await AsyncValue.guard(() async {
+      final currentProfile = state.valueOrNull ?? Profile.empty();
+      
+      // Validate
+      final validationError = ValidationService.validateAge(ageStr);
+      if (validationError != null) {
+        throw Exception(validationError);
+      }
+      
+      int age = int.parse(ageStr);
+      return currentProfile.copyWith(age: age);
+    });
+  }
+
+  Future<void> updateHeight(String heightStr) async {
+    state = await AsyncValue.guard(() async {
+      final currentProfile = state.valueOrNull ?? Profile.empty();
+      
+      final validationError = ValidationService.validateHeight(heightStr);
+      if (validationError != null) {
+        throw Exception(validationError);
+      }
+      
+      double height = double.parse(heightStr);
+      return currentProfile.copyWith(height: height);
+    });
+  }
+
+  Future<void> updateWeight(String weightStr) async {
+    state = await AsyncValue.guard(() async {
+      final currentProfile = state.valueOrNull ?? Profile.empty();
+      
+      final validationError = ValidationService.validateWeight(weightStr);
+      if (validationError != null) {
+        throw Exception(validationError);
+      }
+      
+      double weight = double.parse(weightStr);
+      return currentProfile.copyWith(weight: weight);
+    });
+  }
+}
+```
+
+### **5. UI usage với async updates:**
+
+```dart
+// lib/views/screens/profile_setup.dart
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final profileState = ref.watch(profileViewModelProvider);
+    final profileViewModel = ref.read(profileViewModelProvider.notifier);
+
+    return Column(
+      children: [
+        TextFormField(
+          controller: _ageController,
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            // Async update với validation
+            profileViewModel.updateAge(value);
+          },
+          decoration: const InputDecoration(labelText: "Tuổi"),
+        ),
+        
+        // Show validation errors in real-time
+        profileState.when(
+          data: (profile) => const SizedBox.shrink(),
+          loading: () => const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(),
+          ),
+          error: (error, _) => Text(
+            error.toString(),
+            style: const TextStyle(color: Colors.red, fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+### **6. Recommendation cho NutriPal:**
+
+**Approach 1: Keep it simple (current):**
+```dart
+// Sync updates, validation only in form submission
+void updateAge(String ageStr) {
+  final currentProfile = state.valueOrNull ?? Profile.empty();
+  int age = int.tryParse(ageStr) ?? 0;
+  state = AsyncValue.data(currentProfile.copyWith(age: age));
+}
+```
+
+**Approach 2: Async with validation (better UX):**
+```dart
+// Async updates with real-time validation
+Future<void> updateAge(String ageStr) async {
+  state = await AsyncValue.guard(() async {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    
+    // Validate input
+    final validationError = ValidationService.validateAge(ageStr);
+    if (validationError != null) {
+      throw Exception(validationError);
+    }
+    
+    int age = int.parse(ageStr);
+    return currentProfile.copyWith(age: age);
+  });
+}
+```
+
+### **7. Kết luận:**
+
+**Lý do hiện tại không dùng AsyncValue.guard:**
+- ✅ **Simple operations**: Chỉ update local state
+- ✅ **No async work**: Không có network/database calls
+- ✅ **Performance**: Instant updates
+- ✅ **Less complexity**: Không cần handle loading states
+
+**Nhưng có thể cải thiện bằng:**
+- ✅ **Real-time validation**: Async updates với validation
+- ✅ **Better error handling**: Show validation errors instantly
+- ✅ **Consistent pattern**: Tất cả operations đều async
+- ✅ **Better UX**: User thấy validation errors ngay lập tức
+
+**Tôi recommend Approach 2** cho better user experience! Bạn muốn tôi update code không? 🚀
+
+---
+
+_**User**_
+
+ở authwrapper tôi không thấy phần return homescreen khi các điều kiện được thoả mãn
+
+---
+
+_**Assistant**_
+
+### 🎯 **Bạn đúng rồi! AuthWrapper thiếu HomeScreen/MainScreen:**
+
+### **🔍 Current AuthWrapper:**
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    
+    return authState.when(
+      data: (user) {
+        if (user == null) {
+          return const OnboardingScreen();
+        }
+        
+        // User is authenticated, check profile
+        return FutureBuilder<bool>(
+          future: AuthService().hasProfile(user.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+            
+            final hasProfile = snapshot.data ?? false;
+            
+            if (hasProfile) {
+              return const WelcomeScreen(); // ← Này có vẻ là welcome screen, không phải home screen
+            } else {
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+      loading: () => const SplashScreen(),
+      error: (error, _) => const OnboardingScreen(),
+    );
+  }
+}
+```
+
+### **🏠 Updated AuthWrapper với HomeScreen:**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    
+    return authState.when(
+      data: (user) {
+        if (user == null) {
+          return const OnboardingScreen();
+        }
+        
+        // User is authenticated, check profile
+        return FutureBuilder<bool>(
+          future: AuthService().hasProfile(user.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+            
+            final hasProfile = snapshot.data ?? false;
+            
+            if (hasProfile) {
+              // User có profile → vào HomeScreen (main app)
+              return const HomeScreen(); // ← Thêm HomeScreen
+            } else {
+              // User chưa có profile → vào ProfileSetupScreen
+              return const ProfileSetupScreen();
+            }
+          },
+        );
+      },
+      loading: () => const SplashScreen(),
+      error: (error, _) => const OnboardingScreen(),
+    );
+  }
+}
+```
+
+### **🏠 Tạo HomeScreen:**
+
+```dart
+// lib/views/screens/home_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/profile_viewmodel.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final profileState = ref.watch(profileViewModelProvider);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('NutriPal'),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              // Navigate to profile screen
+              Navigator.pushNamed(context, '/profile');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // Sign out
+              ref.read(authViewModelProvider.notifier).signOut();
+            },
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // Home Tab
+          _buildHomeTab(),
+          
+          // Nutrition Tab
+          _buildNutritionTab(),
+          
+          // Progress Tab
+          _buildProgressTab(),
+          
+          // Settings Tab
+          _buildSettingsTab(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant),
+            label: 'Dinh dưỡng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.trending_up),
+            label: 'Tiến độ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Cài đặt',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeTab() {
+    final authState = ref.watch(authViewModelProvider);
+    final profileState = ref.watch(profileViewModelProvider);
+    
+    return authState.when(
+      data: (user) {
+        if (user == null) return const Center(child: Text('No user'));
+        
+        return profileState.when(
+          data: (profile) => SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome section
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).primaryColor,
+                        Theme.of(context).primaryColor.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Chào ${user.username}!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Hôm nay bạn cảm thấy thế nào?',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Stats section
+                Text(
+                  'Thông tin cá nhân',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'Tuổi',
+                        '${profile.age}',
+                        Icons.cake,
+                        Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Chiều cao',
+                        '${profile.height.toInt()}cm',
+                        Icons.height,
+                        Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'Cân nặng',
+                        '${profile.weight.toInt()}kg',
+                        Icons.monitor_weight,
+                        Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Giới tính',
+                        profile.gender == 'male' ? 'Nam' : 'Nữ',
+                        profile.gender == 'male' ? Icons.male : Icons.female,
+                        profile.gender == 'male' ? Colors.blue : Colors.pink,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Quick actions
+                Text(
+                  'Hành động nhanh',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionCard(
+                        'Cập nhật thông tin',
+                        Icons.edit,
+                        Colors.purple,
+                        () {
+                          Navigator.pushNamed(context, '/profile-edit');
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildActionCard(
+                        'Xem tiến độ',
+                        Icons.analytics,
+                        Colors.teal,
+                        () {
+                          setState(() {
+                            _currentIndex = 2;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(child: Text('Error: $error')),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text('Error: $error')),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNutritionTab() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.restaurant, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Tính năng dinh dưỡng',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          Text(
+            'Đang phát triển...',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressTab() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.trending_up, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Theo dõi tiến độ',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          Text(
+            'Đang phát triển...',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTab() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Cài đặt',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          Text(
+            'Đang phát triển...',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+### **🔄 Flow hoàn chỉnh:**
+
+```
+1. App Start → AuthWrapper
+2. Check Firebase Auth:
+   ├── Not authenticated → OnboardingScreen → Login/Signup
+   └── Authenticated → Check Profile:
+       ├── No profile → ProfileSetupScreen → Setup → HomeScreen
+       └── Has profile → HomeScreen (main app)
+```
+
+### **🎯 Kết luận:**
+
+**Điều kiện để vào HomeScreen:**
+- ✅ User đã authenticated (có Firebase Auth)
+- ✅ User đã có profile data (trong Firestore)
+- ✅ AuthWrapper check cả hai điều kiện
+
+**HomeScreen features:**
+- ✅ Welcome message với username
+- ✅ Display profile stats
+- ✅ Quick actions
+- ✅ Bottom navigation (4 tabs)
+- ✅ Logout functionality
+
+Bạn muốn tôi thêm features gì khác cho HomeScreen không? 🚀
+
+---
+
+_**User**_
+
+trường hợp khi đăng nhập mà nhập sai thông tin tài khoản thì đã xử lý chưa
+
+---
+
+_**Assistant**_
+
+### 🚨 **Xử lý lỗi khi đăng nhập sai thông tin:**
+
+### **1. Kiểm tra AuthService có handle lỗi chưa:**
+
+```dart
+// lib/services/auth_service.dart
+class AuthService {
+  Future<AuthUser?> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        return await getUserData(credential.user!.uid);
+      }
+    } on FirebaseAuthException catch (e) {
+      // ✅ Đã handle Firebase Auth exceptions
+      throw _handleAuthException(e);
+    }
+    return null;
+  }
+
+  String _handleAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'Email không tồn tại';
+      case 'wrong-password':
+        return 'Mật khẩu không đúng';
+      case 'invalid-email':
+        return 'Email không hợp lệ';
+      case 'user-disabled':
+        return 'Tài khoản đã bị vô hiệu hóa';
+      case 'too-many-requests':
+        return 'Quá nhiều lần thử. Vui lòng thử lại sau';
+      default:
+        return 'Đã xảy ra lỗi: ${e.message}';
+    }
+  }
+}
+```
+
+### **2. AuthViewModel đã handle lỗi:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+Future<void> login({
+  required String email,
+  required String password,
+  required BuildContext context,
+}) async {
+  state = const AsyncValue.loading();
+
+  state = await AsyncValue.guard(() async {
+    final user = await _authService.login(email: email, password: password);
+
+    if (user != null && context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+
+    return user;
+  });
+}
+// ✅ AsyncValue.guard() sẽ catch exception từ AuthService
+// ✅ Set state thành AsyncValue.error() nếu có lỗi
+```
+
+### **3. Cải thiện xử lý lỗi trong AuthViewModel:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+Future<void> login({
+  required String email,
+  required String password,
+  required BuildContext context,
+}) async {
+  state = const AsyncValue.loading();
+
+  state = await AsyncValue.guard(() async {
+    final user = await _authService.login(email: email, password: password);
+
+    if (user != null && context.mounted) {
+      // ✅ Chỉ navigate khi login thành công
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      // ✅ Throw error nếu user null
+      throw Exception('Đăng nhập thất bại');
+    }
+
+    return user;
+  });
+}
+```
+
+### **4. UI hiển thị lỗi trong LoginScreen:**
+
+```dart
+// lib/views/screens/login_screen.dart
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider.notifier);
+
+    return Scaffold(
+      body: Column(
+        children: [
+          // Form fields...
+          
+          // Submit button
+          ElevatedButton(
+            onPressed: authState.isLoading
+                ? null
+                : () {
+                    if (_formKey.currentState!.validate()) {
+                      authViewModel.login(
+                        email: _emailController.text.trim(),
+                        password: _passwordController.text,
+                        context: context,
+                      );
+                    }
+                  },
+            child: authState.isLoading
+                ? const CircularProgressIndicator()
+                : const Text('Đăng nhập'),
+          ),
+          
+          // ✅ Error handling
+          authState.when(
+            data: (_) => const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+            error: (error, _) => Container(
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      error.toString(),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+### **5. Cải thiện UX - Clear error khi user gõ lại:**
+
+```dart
+// lib/views/screens/login_screen.dart
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Clear error khi user thay đổi input
+    _emailController.addListener(_clearError);
+    _passwordController.addListener(_clearError);
+  }
+
+  void _clearError() {
+    final authState = ref.read(authViewModelProvider);
+    if (authState.hasError) {
+      // Reset state để clear error
+      ref.read(authViewModelProvider.notifier).clearError();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Same as above...
+  }
+
+  @override
+  void dispose() {
+    _emailController.removeListener(_clearError);
+    _passwordController.removeListener(_clearError);
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+}
+```
+
+### **6. Thêm clearError method vào AuthViewModel:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends AsyncNotifier<AuthUser?> {
+  // ...existing code...
+
+  void clearError() {
+    if (state.hasError) {
+      state = AsyncValue.data(state.valueOrNull);
+    }
+  }
+}
+```
+
+### **7. Test scenarios:**
+
+```dart
+// Các trường hợp lỗi sẽ được handle:
+
+// 1. Email không tồn tại
+// Input: test@nonexistent.com
+// Output: "Email không tồn tại"
+
+// 2. Mật khẩu sai
+// Input: correct@email.com + wrongpassword
+// Output: "Mật khẩu không đúng"
+
+// 3. Email format sai
+// Input: invalidemail
+// Output: "Email không hợp lệ"
+
+// 4. Tài khoản bị disable
+// Output: "Tài khoản đã bị vô hiệu hóa"
+
+// 5. Quá nhiều lần thử
+// Output: "Quá nhiều lần thử. Vui lòng thử lại sau"
+```
+
+### **8. Enhanced error handling:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+Future<void> login({
+  required String email,
+  required String password,
+  required BuildContext context,
+}) async {
+  state = const AsyncValue.loading();
+
+  state = await AsyncValue.guard(() async {
+    try {
+      final user = await _authService.login(email: email, password: password);
+
+      if (user != null && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+        return user;
+      } else {
+        throw Exception('Đăng nhập thất bại');
+      }
+    } catch (e) {
+      // Log error for debugging
+      print('Login error: $e');
+      
+      // Re-throw để AsyncValue.guard handle
+      rethrow;
+    }
+  });
+}
+```
+
+### **✅ Kết luận - Đã xử lý lỗi đăng nhập:**
+
+1. **✅ AuthService**: Handle Firebase Auth exceptions
+2. **✅ AuthViewModel**: Sử dụng AsyncValue.guard() để catch errors
+3. **✅ UI**: Hiển thị error messages với `.when()`
+4. **✅ UX**: Clear error khi user input thay đổi
+5. **✅ Error messages**: Tiếng Việt, user-friendly
+
+**Flow khi đăng nhập sai:**
+```
+1. User nhập sai email/password
+2. AuthService throw FirebaseAuthException
+3. AuthViewModel catch error via AsyncValue.guard()
+4. State set thành AsyncValue.error()
+5. UI rebuild và hiển thị error message
+6. User sửa input → Error cleared
+```
+
+Bạn có muốn tôi thêm features gì khác cho error handling không? 🚀
+
+---
+
+_**User**_
+
+khi tôi reload app thì app vẫn chuyển tôi về trang onboarding mặc dù đã đăng nhập thành công
+
+---
+
+_**Assistant**_
+
+### 🚨 **Vấn đề: App reload về OnboardingScreen mặc dù đã đăng nhập**
+
+### **🔍 Nguyên nhân:**
+
+**AuthViewModel không tự động load current user khi app start:**
+```dart
+class AuthViewModel extends AsyncNotifier<AuthUser?> {
+  @override
+  Future<AuthUser?> build() async {
+    // Initial state - check if user is already logged in
+    final currentUser = _authService.currentUser;
+    if (currentUser != null) {
+      return await _authService.getUserData(currentUser.uid);
+    }
+    return null; // ← Trả về null nếu không có user
+  }
+}
+```
+
+**Vấn đề:** `_authService.currentUser` có thể null ngay sau khi app start vì Firebase Auth chưa kịp restore session.
+
+### **🔧 Giải pháp:**
+
+### **1. Sửa AuthViewModel để listen Firebase Auth state:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+import '../models/auth_user.dart';
+
+class AuthViewModel extends AsyncNotifier<AuthUser?> {
+  final AuthService _authService = AuthService();
+  
+  @override
+  Future<AuthUser?> build() async {
+    // Listen to Firebase Auth state changes
+    return await _listenToAuthState();
+  }
+
+  Future<AuthUser?> _listenToAuthState() async {
+    // Wait for Firebase Auth to initialize
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      try {
+        // Get user data from Firestore
+        final authUser = await _authService.getUserData(currentUser.uid);
+        return authUser;
+      } catch (e) {
+        // If error getting user data, sign out
+        await _authService.signOut();
+        return null;
+      }
+    }
+    return null;
+  }
+
+  Future<void> signup({
+    required String username,
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.signup(
+        username: username,
+        email: email,
+        password: password,
+      );
+
+      if (user != null && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+        );
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> login({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.login(email: email, password: password);
+
+      if (user != null && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> signOut() async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      await _authService.signOut();
+      return null;
+    });
+  }
+
+  void clearError() {
+    if (state.hasError) {
+      state = AsyncValue.data(state.valueOrNull);
+    }
+  }
+}
+```
+
+### **2. Hoặc sử dụng StreamProvider (Recommended):**
+
+```dart
+// lib/providers/auth_provider.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+import '../models/auth_user.dart';
+
+// Provider for Firebase Auth state stream
+final firebaseAuthStateProvider = StreamProvider<User?>((ref) {
+  return FirebaseAuth.instance.authStateChanges();
+});
+
+// Provider for AuthUser based on Firebase Auth state
+final authUserProvider = FutureProvider<AuthUser?>((ref) async {
+  final firebaseUser = await ref.watch(firebaseAuthStateProvider.future);
+  
+  if (firebaseUser == null) {
+    return null;
+  }
+  
+  try {
+    final authService = AuthService();
+    return await authService.getUserData(firebaseUser.uid);
+  } catch (e) {
+    // If error, return null
+    return null;
+  }
+});
+```
+
+### **3. Update AuthWrapper để dùng StreamProvider:**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
+import '../screens/home_screen.dart';
+import '../screens/onboarding_screen.dart';
+import '../screens/profile_setup_screen.dart';
+import '../screens/splash_screen.dart';
+
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authUserAsync = ref.watch(authUserProvider);
+
+    return authUserAsync.when(
+      data: (user) {
+        if (user == null) {
+          return const OnboardingScreen();
+        }
+
+        // User is authenticated, check profile
+        return FutureBuilder<bool>(
+          future: AuthService().hasProfile(user.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            final hasProfile = snapshot.data ?? false;
+            return hasProfile ? const HomeScreen() : const ProfileSetupScreen();
+          },
+        );
+      },
+      loading: () => const SplashScreen(),
+      error: (error, _) => const OnboardingScreen(),
+    );
+  }
+}
+```
+
+### **4. Hoặc cách đơn giản nhất - Sửa AuthWrapper hiện tại:**
+
+```dart
+// lib/views/widgets/auth_wrapper.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/auth_service.dart';
+import '../screens/home_screen.dart';
+import '../screens/onboarding_screen.dart';
+import '../screens/profile_setup_screen.dart';
+import '../screens/splash_screen.dart';
+
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen directly to Firebase Auth state
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+
+        final firebaseUser = snapshot.data;
+        
+        // Not authenticated
+        if (firebaseUser == null) {
+          return const OnboardingScreen();
+        }
+
+        // Authenticated - check profile
+        return FutureBuilder<bool>(
+          future: AuthService().hasProfile(firebaseUser.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            final hasProfile = snapshot.data ?? false;
+            return hasProfile ? const HomeScreen() : const ProfileSetupScreen();
+          },
+        );
+      },
+    );
+  }
+}
+```
+
+### **5. Đảm bảo AuthViewModel vẫn hoạt động cho Login/Signup:**
+
+```dart
+// lib/viewmodels/auth_viewmodel.dart
+class AuthViewModel extends AsyncNotifier<AuthUser?> {
+  final AuthService _authService = AuthService();
+  
+  @override
+  Future<AuthUser?> build() async {
+    // Just return current state, AuthWrapper handles persistence
+    return null;
+  }
+
+  Future<void> signup({
+    required String username,
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.signup(
+        username: username,
+        email: email,
+        password: password,
+      );
+
+      if (user != null && context.mounted) {
+        // Don't navigate here, let AuthWrapper handle it
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+        // );
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> login({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      final user = await _authService.login(email: email, password: password);
+
+      if (user != null && context.mounted) {
+        // Don't navigate here, let AuthWrapper handle it
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const HomeScreen()),
+        // );
+      }
+
+      return user;
+    });
+  }
+
+  Future<void> signOut() async {
+    state = const AsyncValue.loading();
+    
+    state = await AsyncValue.guard(() async {
+      await _authService.signOut();
+      return null;
+    });
+  }
+}
+```
+
+### **🎯 Recommendation:**
+
+**Dùng cách 4 (StreamBuilder) vì:**
+- ✅ **Đơn giản nhất**
+- ✅ **Real-time auth state**
+- ✅ **Tự động persist session**
+- ✅ **Không cần refactor nhiều**
+
+**Với cách này:**
+1. App reload → StreamBuilder listen Firebase Auth
+2. Firebase Auth restore session → User authenticated
+3. AuthWrapper check profile → Navigate to correct screen
+4. **Không còn về OnboardingScreen** khi đã đăng nhập
+
+Bạn muốn tôi implement cách nào? 🚀
 
 ---
 
