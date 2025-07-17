@@ -7,7 +7,7 @@ import 'package:nutripal/services/auth_service.dart';
 import 'package:nutripal/views/screens/home_screen.dart';
 import 'package:nutripal/views/screens/profile_setup_screen.dart';
 
-class AuthViewModel extends AsyncNotifier<AuthUser?> {
+class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
   final _authService = AuthService();
 
   @override
@@ -65,13 +65,10 @@ class AuthViewModel extends AsyncNotifier<AuthUser?> {
         password: password,
       );
 
+      await Future.delayed(Duration(milliseconds: 120));
       if (user != null && context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
-        );
+        Navigator.of(context).pop();
       }
-
       return user;
     });
   }
@@ -85,14 +82,11 @@ class AuthViewModel extends AsyncNotifier<AuthUser?> {
 
     state = await AsyncValue.guard(() async {
       final user = await _authService.login(email: email, password: password);
+      await Future.delayed(Duration(milliseconds: 120));
 
       if (user != null && context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        Navigator.of(context).pop();
       }
-
       return user;
     });
   }
@@ -107,6 +101,7 @@ class AuthViewModel extends AsyncNotifier<AuthUser?> {
   }
 }
 
-final authViewModelProvider = AsyncNotifierProvider<AuthViewModel, AuthUser?>(
-  () => AuthViewModel(),
-);
+final authViewModelProvider =
+    AutoDisposeAsyncNotifierProvider<AuthViewModel, AuthUser?>(
+      () => AuthViewModel(),
+    );
