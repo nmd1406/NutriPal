@@ -134,6 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
+              const SizedBox(height: 16),
               authState.when(
                 data: (_) => const SizedBox.shrink(),
                 loading: () => const SizedBox.shrink(),
@@ -174,11 +175,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: TextDecoration.underline,
                       ),
                       recognizer: TapGestureRecognizer()
-                        ..onTap = () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => SignupScreen(),
-                          ),
-                        ),
+                        ..onTap = () {
+                          ref.invalidate(authViewModelProvider);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SignupScreen(),
+                            ),
+                          );
+                        },
                     ),
                   ],
                 ),
