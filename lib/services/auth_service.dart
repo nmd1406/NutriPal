@@ -37,7 +37,7 @@ class AuthService {
 
         return newUser;
       }
-    } on FirebaseAuthException catch (e) {
+    } catch (e) {
       _handleAuthException(e);
     }
 
@@ -57,7 +57,7 @@ class AuthService {
       if (credential.user != null) {
         return await getUserData(credential.user!.uid);
       }
-    } on FirebaseAuthException catch (e) {
+    } catch (e) {
       _handleAuthException(e);
     }
 
@@ -115,20 +115,28 @@ class AuthService {
     }
   }
 
-  String _handleAuthException(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return 'Email không tồn tại';
-      case 'wrong-password':
-        return 'Mật khẩu không đúng';
-      case 'email-already-in-use':
-        return 'Email đã được sử dụng';
-      case 'weak-password':
-        return 'Mật khẩu quá yếu';
-      case 'invalid-email':
-        return 'Email không hợp lệ';
-      default:
-        return 'Đã xảy ra lỗi: ${e.message}';
+  void _handleAuthException(dynamic e) {
+    String message;
+    String errorMessage = e.toString().toLowerCase();
+
+    if (errorMessage.contains('user-not-found') ||
+        errorMessage.contains('no user record')) {
+      message = 'Email không tồn tại';
+    } else if (errorMessage.contains('wrong-password') ||
+        errorMessage.contains('incorrect') ||
+        errorMessage.contains('invalid-credential')) {
+      message = 'Mật khẩu không đúng';
+    } else if (errorMessage.contains('email-already-in-use')) {
+      message = 'Email đã được sử dụng';
+    } else if (errorMessage.contains('weak-password')) {
+      message = 'Mật khẩu quá yếu';
+    } else if (errorMessage.contains('invalid-email') ||
+        errorMessage.contains('malformed')) {
+      message = 'Email không hợp lệ';
+    } else {
+      message = 'Đã xảy ra lỗi: ${e.toString()}';
     }
+
+    throw Exception(message);
   }
 }
