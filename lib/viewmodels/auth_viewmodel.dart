@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/models/auth_user.dart';
 import 'package:nutripal/services/auth_service.dart';
-import 'package:nutripal/views/screens/home_screen.dart';
-import 'package:nutripal/views/screens/profile_setup_screen.dart';
 
 class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
   final _authService = AuthService();

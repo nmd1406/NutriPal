@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/services/auth_service.dart';
-import 'package:nutripal/views/screens/home_screen.dart';
+import 'package:nutripal/views/screens/main_screen.dart';
 import 'package:nutripal/views/screens/onboarding_screen.dart';
 import 'package:nutripal/views/screens/profile_setup_screen.dart';
 import 'package:nutripal/views/screens/splash_screen.dart';
@@ -33,7 +33,7 @@ class AuthWrapper extends ConsumerWidget {
             }
 
             bool hasProfile = snapshot.data ?? false;
-            return hasProfile ? const HomeScreen() : const ProfileSetupScreen();
+            return hasProfile ? const MainScreen() : const ProfileSetupScreen();
           },
         );
       },
