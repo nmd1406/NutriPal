@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDaxS8Pthm7deaMy3T09bm-1FL6idZ9XSU',
+    apiKey: 'AIzaSyAfSyUTXDvtw3usLc4Ra77Lwz4WGz9Fy38',
     appId: '1:805638158582:android:6a34bd78e101e79c2954d7',
     messagingSenderId: '805638158582',
     projectId: 'nutripal-846ab',
@@ -66,4 +66,5 @@ class DefaultFirebaseOptions {
     iosClientId: '805638158582-v2flf2fs4sd5bem1e6jfbivdt8unu4iq.apps.googleusercontent.com',
     iosBundleId: 'com.example.nutripal',
   );
+
 }
