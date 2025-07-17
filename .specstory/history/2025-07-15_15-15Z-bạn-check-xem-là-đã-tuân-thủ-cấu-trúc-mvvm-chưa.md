@@ -10002,3 +10002,15 @@ Bạn muốn tôi implement cách nào? 🚀
 
 ---
 
+_**User**_
+
+tôi bị lộ google api key, giờ phải làm sao
+
+---
+
+_**Assistant**_
+
+
+
+---
+
