@@ -25,7 +25,8 @@ class AuthService {
           uid: credential.user!.uid,
           username: username,
           email: email,
-          imageUrl: null,
+          imageUrl:
+              "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/default-avatar.jpg?alt=media&token=8361341a-e45e-4d7d-84cf-7a86c2359688",
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -66,6 +67,15 @@ class AuthService {
 
   Future<void> logout() async {
     await _auth.signOut();
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      _handleAuthException(e);
+    }
+    return;
   }
 
   Future<void> updateUserData({
@@ -133,6 +143,18 @@ class AuthService {
     } else if (errorMessage.contains('invalid-email') ||
         errorMessage.contains('malformed')) {
       message = 'Email không hợp lệ';
+    }
+    // Thêm các case cho reset password
+    else if (errorMessage.contains('user-disabled')) {
+      message = 'Tài khoản đã bị vô hiệu hóa';
+    } else if (errorMessage.contains('too-many-requests')) {
+      message = 'Quá nhiều yêu cầu. Vui lòng thử lại sau';
+    } else if (errorMessage.contains('operation-not-allowed')) {
+      message = 'Chức năng đặt lại mật khẩu không được bật';
+    } else if (errorMessage.contains('quota-exceeded')) {
+      message = 'Đã vượt quá giới hạn gửi email. Thử lại sau';
+    } else if (errorMessage.contains('network')) {
+      message = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet';
     } else {
       message = 'Đã xảy ra lỗi: ${e.toString()}';
     }

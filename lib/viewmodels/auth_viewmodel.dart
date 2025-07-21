@@ -99,7 +99,27 @@ class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
   }
 }
 
+class ResetPasswordNotifier extends AutoDisposeAsyncNotifier<void> {
+  final _authService = AuthService();
+
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> resetPassword(String email) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      await _authService.resetPassword(email);
+    });
+  }
+}
+
 final authViewModelProvider =
     AutoDisposeAsyncNotifierProvider<AuthViewModel, AuthUser?>(
       () => AuthViewModel(),
+    );
+
+final resetPasswordProvider =
+    AutoDisposeAsyncNotifierProvider<ResetPasswordNotifier, void>(
+      () => ResetPasswordNotifier(),
     );

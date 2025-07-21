@@ -16,11 +16,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _resetEmailController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _resetEmailController.dispose();
     super.dispose();
   }
 
@@ -96,7 +98,173 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => Consumer(
+                      builder: (context, ref, child) {
+                        final resetPasswordState = ref.watch(
+                          resetPasswordProvider,
+                        );
+                        final resetPasswordNotifier = ref.read(
+                          resetPasswordProvider.notifier,
+                        );
+
+                        return AlertDialog(
+                          insetPadding: const EdgeInsets.all(24),
+                          title: Text("Quên mật khẩu"),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.lock_reset_sharp,
+                                size: 60,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                "Nhập email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu.",
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 22),
+                              TextFormField(
+                                controller: _resetEmailController,
+                                keyboardType: TextInputType.emailAddress,
+                                autocorrect: false,
+                                decoration: InputDecoration(
+                                  labelText: "Email",
+                                  labelStyle: TextStyle(fontSize: 15),
+                                  prefixIcon: const Icon(
+                                    Icons.email_outlined,
+                                    size: 28,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: const BorderSide(width: 1.3),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              resetPasswordState.when(
+                                data: (_) => const SizedBox.shrink(),
+                                loading: () => const SizedBox.shrink(),
+                                error: (error, _) => Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          error.toString().replaceFirst(
+                                            'Exception: ',
+                                            '',
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: resetPasswordState.isLoading
+                                      ? null
+                                      : () async {
+                                          final email = _resetEmailController
+                                              .text
+                                              .trim();
+
+                                          if (email.isEmpty) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  "Vui lòng nhập email",
+                                                ),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                            return;
+                                          }
+
+                                          await resetPasswordNotifier
+                                              .resetPassword(email);
+
+                                          final currentState = ref.read(
+                                            resetPasswordProvider,
+                                          );
+                                          if (currentState.hasValue &&
+                                              !currentState.hasError) {
+                                            Navigator.of(context).pop();
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  "Liên kết đã được gửi. Hãy kiểm tra email của bạn.",
+                                                ),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
+                                    elevation: 8,
+                                  ),
+                                  child: resetPasswordState.isLoading
+                                      ? SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          "Gửi liên kết",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("Quay lại đăng nhập"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   child: Text(
                     "Quên mật khẩu?",
                     style: TextStyle(
@@ -124,14 +292,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   elevation: 8,
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
-                child: Text(
-                  "Đăng nhập",
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
+                child: authState.isLoading
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        "Đăng nhập",
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
 
               const SizedBox(height: 16),
@@ -151,7 +328,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          error.toString(),
+                          error.toString().replaceFirst('Exception: ', ''),
                           style: const TextStyle(color: Colors.red),
                         ),
                       ),

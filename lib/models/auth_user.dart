@@ -2,7 +2,7 @@ class AuthUser {
   final String uid;
   final String username;
   final String email;
-  final String? imageUrl;
+  final String imageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -10,7 +10,7 @@ class AuthUser {
     required this.uid,
     required this.username,
     required this.email,
-    this.imageUrl,
+    required this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -27,6 +27,7 @@ class AuthUser {
       uid: uid ?? this.uid,
       username: username ?? this.username,
       email: email ?? this.email,
+      imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -37,7 +38,7 @@ class AuthUser {
       uid: json["uid"] as String,
       username: json["username"] as String,
       email: json["email"] as String,
-      imageUrl: json["imageUrl"] as String?,
+      imageUrl: json["imageUrl"] as String,
       createdAt: DateTime.parse(json["createdAt"] as String),
       updatedAt: DateTime.parse(json["updatedAt"] as String),
     );
