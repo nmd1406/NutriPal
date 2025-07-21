@@ -1,43 +1,45 @@
 {
   "project_info": {
-    "project_number": "805638158582",
-    "project_id": "nutripal-846ab",
-    "storage_bucket": "nutripal-846ab.firebasestorage.app"
+    "project_number": "923505429480",
+    "project_id": "flutter-chat-app-da95b",
+    "storage_bucket": "flutter-chat-app-da95b.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:805638158582:android:6a34bd78e101e79c2954d7",
+        "mobilesdk_app_id": "1:923505429480:android:bf8dae2b161ca38b08725d",
         "android_client_info": {
-          "package_name": "com.example.nutripal"
+          "package_name": "com.example.chat_app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "805638158582-uu7jilq5cdpof29k445jdgsoqg6j3nl8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAfSyUTXDvtw3usLc4Ra77Lwz4WGz9Fy38"
+          "current_key": "AIzaSyDfNK6C2dq8hYoJNFyqkUD2XKcy1ObAsFo"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "805638158582-uu7jilq5cdpof29k445jdgsoqg6j3nl8.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "805638158582-v2flf2fs4sd5bem1e6jfbivdt8unu4iq.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.nutripal"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:923505429480:android:2fa415bdfa2d570808725d",
+        "android_client_info": {
+          "package_name": "com.example.nutripal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfNK6C2dq8hYoJNFyqkUD2XKcy1ObAsFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
         }
       }
     }

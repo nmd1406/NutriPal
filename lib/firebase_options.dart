@@ -50,20 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAfSyUTXDvtw3usLc4Ra77Lwz4WGz9Fy38',
-    appId: '1:805638158582:android:6a34bd78e101e79c2954d7',
-    messagingSenderId: '805638158582',
-    projectId: 'nutripal-846ab',
-    storageBucket: 'nutripal-846ab.firebasestorage.app',
+    apiKey: 'AIzaSyDfNK6C2dq8hYoJNFyqkUD2XKcy1ObAsFo',
+    appId: '1:923505429480:android:2fa415bdfa2d570808725d',
+    messagingSenderId: '923505429480',
+    projectId: 'flutter-chat-app-da95b',
+    storageBucket: 'flutter-chat-app-da95b.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDb_gSQxNF3O2f3kn2RsTXRqqjhFevh2OU',
-    appId: '1:805638158582:ios:fe287789778296a92954d7',
-    messagingSenderId: '805638158582',
-    projectId: 'nutripal-846ab',
-    storageBucket: 'nutripal-846ab.firebasestorage.app',
-    iosClientId: '805638158582-v2flf2fs4sd5bem1e6jfbivdt8unu4iq.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBnaHa_MJZrciJcWU02-cIg__QeZko3LHU',
+    appId: '1:923505429480:ios:425c7b45df443dc608725d',
+    messagingSenderId: '923505429480',
+    projectId: 'flutter-chat-app-da95b',
+    storageBucket: 'flutter-chat-app-da95b.appspot.com',
     iosBundleId: 'com.example.nutripal',
   );
 
