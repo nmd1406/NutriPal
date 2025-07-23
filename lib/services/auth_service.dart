@@ -26,7 +26,7 @@ class AuthService {
           username: username,
           email: email,
           imageUrl:
-              "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/default-avatar.jpg?alt=media&token=8361341a-e45e-4d7d-84cf-7a86c2359688",
+              "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
