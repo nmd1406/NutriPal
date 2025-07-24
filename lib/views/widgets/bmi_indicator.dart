@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nutripal/models/profile.dart';
 
 class BMIIndicator extends StatelessWidget {
-  final double bmiValue;
+  final Profile profile;
 
-  const BMIIndicator({super.key, required this.bmiValue});
+  const BMIIndicator({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +63,7 @@ class BMIIndicator extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 100, // temp value
+                left: profile.getBMIPosition(width),
                 child: Container(
                   width: 10,
                   height: height + 25,
@@ -83,7 +84,7 @@ class BMIIndicator extends StatelessWidget {
                       horizontal: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurpleAccent,
+                      color: profile.bmiColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -102,8 +103,8 @@ class BMIIndicator extends StatelessWidget {
                 style: TextStyle(color: Colors.black),
               ),
               TextSpan(
-                text: "Bình thường",
-                style: TextStyle(color: Colors.yellow.shade600),
+                text: profile.bmiDescription,
+                style: TextStyle(color: profile.bmiColor),
               ),
             ],
           ),
