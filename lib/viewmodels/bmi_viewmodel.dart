@@ -52,7 +52,11 @@ class BMIViewModel extends StateNotifier<BMIState> {
   }
 
   void resetToUserBMI() {
-    state = state.copyWith(calculatedProfile: null);
+    state = BMIState(
+      userProfile: state.userProfile,
+      calculatedProfile: null,
+      isCalculating: false,
+    );
   }
 
   String? validateHeight(String? heightStr) {
