@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart' show Colors, Color;
+
 class Profile {
   final String uid;
   final String gender;
@@ -63,5 +65,92 @@ class Profile {
     return gender.isEmpty && age == 0 && height == 0 && weight == 0;
   }
 
-  // business logics
+  double get bmi {
+    if (height <= 0 || weight <= 0) {
+      return 0;
+    }
+    return weight / ((height / 100) * (height / 100));
+  }
+
+  BMICategory get bmiCategory {
+    if (bmi < 18.5) {
+      return BMICategory.underweight;
+    }
+    if (bmi < 25) {
+      return BMICategory.normal;
+    }
+    if (bmi < 30) {
+      return BMICategory.overweight;
+    }
+    if (bmi < 35) {
+      return BMICategory.obeseI;
+    }
+    return BMICategory.obeseII;
+  }
+
+  String get bmiDescription {
+    switch (bmiCategory) {
+      case BMICategory.underweight:
+        return "Thiếu cân";
+      case BMICategory.normal:
+        return "Bình thường";
+      case BMICategory.overweight:
+        return "Thừa cân";
+      case BMICategory.obeseI:
+        return "Béo phì độ I";
+      case BMICategory.obeseII:
+        return "Béo phì độ II";
+    }
+  }
+
+  Color get bmiColor {
+    switch (bmiCategory) {
+      case BMICategory.underweight:
+        return Colors.blue;
+      case BMICategory.normal:
+        return Colors.green;
+      case BMICategory.overweight:
+        return Colors.yellow.shade600;
+      case BMICategory.obeseI:
+        return Colors.orange;
+      case BMICategory.obeseII:
+        return Colors.red;
+    }
+  }
+
+  double getBMIPosition(double barWidth) {
+    final bmiValue = bmi;
+    double position;
+
+    if (bmiValue < 18.5) {
+      position = (bmiValue / 18.5) * (barWidth * 0.2);
+    } else if (bmiValue < 25) {
+      position =
+          (barWidth * 0.2) +
+          ((bmiValue - 18.5) / (25 - 18.5)) * (barWidth * 0.2);
+    } else if (bmiValue < 30) {
+      position =
+          (barWidth * 0.4) + ((bmiValue - 25) / (30 - 25)) * (barWidth * 0.2);
+    } else if (bmiValue < 35) {
+      position =
+          (barWidth * 0.6) + ((bmiValue - 30) / (35 - 30)) * (barWidth * 0.2);
+    } else {
+      position = (barWidth * 0.8) + ((bmiValue - 35) / 10) * (barWidth * 0.2);
+      if (position > barWidth - 10) {
+        position = barWidth - 10;
+      }
+    }
+
+    return position.clamp(0.0, barWidth - 10);
+  }
+
+  static Profile calculateBMI(
+    Profile baseProfile,
+    double height,
+    double weight,
+  ) {
+    return baseProfile.copyWith(height: height, weight: weight);
+  }
 }
+
+enum BMICategory { underweight, normal, overweight, obeseI, obeseII }
