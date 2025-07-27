@@ -6,6 +6,9 @@ class Profile {
   final int age;
   final double height;
   final double weight;
+  final String activityLevel;
+  final String goal;
+  final double targetWeight;
 
   const Profile({
     required this.uid,
@@ -13,6 +16,9 @@ class Profile {
     required this.age,
     required this.height,
     required this.weight,
+    this.activityLevel = '',
+    this.goal = '',
+    this.targetWeight = 0.0,
   });
 
   Profile copyWith({
@@ -21,6 +27,9 @@ class Profile {
     int? age,
     double? height,
     double? weight,
+    String? activityLevel,
+    String? goal,
+    double? targetWeight,
   }) {
     return Profile(
       uid: uid ?? this.uid,
@@ -28,6 +37,9 @@ class Profile {
       age: age ?? this.age,
       height: height ?? this.height,
       weight: weight ?? this.weight,
+      activityLevel: activityLevel ?? this.activityLevel,
+      goal: goal ?? this.goal,
+      targetWeight: targetWeight ?? this.targetWeight,
     );
   }
 
@@ -38,6 +50,9 @@ class Profile {
       'age': age,
       'height': height,
       'weight': weight,
+      'activityLevel': activityLevel,
+      'goal': goal,
+      'targetWeight': targetWeight,
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
     };
@@ -50,19 +65,47 @@ class Profile {
       age: json['age'] as int,
       height: (json['height'] as num).toDouble(),
       weight: (json['weight'] as num).toDouble(),
+      activityLevel: json['activityLevel'] as String? ?? '',
+      goal: json['goal'] as String? ?? '',
+      targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   static Profile empty() {
-    return Profile(uid: "", gender: "", age: 0, height: 0, weight: 0);
+    return Profile(
+      uid: "",
+      gender: "",
+      age: 0,
+      height: 0,
+      weight: 0,
+      activityLevel: "",
+      goal: "",
+      targetWeight: 0.0,
+    );
   }
 
   bool get isValid {
-    return gender.isNotEmpty && age > 0 && height > 0 && weight > 0;
+    bool basicInfoValid =
+        gender.isNotEmpty && age > 0 && height > 0 && weight > 0;
+    bool activityValid = activityLevel.isNotEmpty;
+    bool goalValid = goal.isNotEmpty;
+
+    // If goal is gain or lose, target weight must be set
+    if (goal == 'gain' || goal == 'lose') {
+      goalValid = goalValid && targetWeight > 0;
+    }
+
+    return basicInfoValid && activityValid && goalValid;
   }
 
   bool get isEmpty {
-    return gender.isEmpty && age == 0 && height == 0 && weight == 0;
+    return gender.isEmpty &&
+        age == 0 &&
+        height == 0 &&
+        weight == 0 &&
+        activityLevel.isEmpty &&
+        goal.isEmpty &&
+        targetWeight == 0;
   }
 
   double get bmi {

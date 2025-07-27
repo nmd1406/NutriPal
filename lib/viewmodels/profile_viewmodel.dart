@@ -53,6 +53,26 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     state = AsyncValue.data(currentProfile.copyWith(weight: weight));
   }
 
+  void updateActivityLevel(String activityLevel) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(
+      currentProfile.copyWith(activityLevel: activityLevel),
+    );
+  }
+
+  void updateGoal(String goal) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(goal: goal));
+  }
+
+  void updateTargetWeight(String targetWeightStr) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    double targetWeight = double.tryParse(targetWeightStr) ?? 0.0;
+    state = AsyncValue.data(
+      currentProfile.copyWith(targetWeight: targetWeight),
+    );
+  }
+
   String? validateGender(String? gender) {
     if (gender == null || gender.isEmpty) {
       return "Vui lòng chọn giới tính";
@@ -94,9 +114,31 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     return null;
   }
 
+  String? validateTargetWeight(String? targetWeightStr) {
+    if (targetWeightStr == null || targetWeightStr.trim().isEmpty) {
+      return "Nhập cân nặng mục tiêu";
+    }
+    double? targetWeight = double.tryParse(targetWeightStr);
+    if (targetWeight == null || targetWeight < 30 || targetWeight > 200) {
+      return "30-200kg";
+    }
+
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+
+    if (currentProfile.goal == "gain" &&
+        targetWeight <= currentProfile.weight) {
+      return "Cân nặng mục tiêu phải lớn hơn cân nặng hiện tại";
+    }
+    if (currentProfile.goal == "lose" &&
+        targetWeight >= currentProfile.weight) {
+      return "Cân nặng mục tiêu phải bé hơn cân nặng hiện tại";
+    }
+    return null;
+  }
+
   Future<void> submitProfile(BuildContext context) async {
     final currentProfile = state.valueOrNull ?? Profile.empty();
-    if (currentProfile == null || !currentProfile.isValid) {
+    if (!currentProfile.isValid) {
       return;
     }
 
