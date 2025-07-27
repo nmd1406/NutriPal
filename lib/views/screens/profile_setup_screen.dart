@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/screens/splash_screen.dart';
+import 'package:nutripal/views/widgets/activity_level_page.dart';
+import 'package:nutripal/views/widgets/basic_info_page.dart';
+import 'package:nutripal/views/widgets/goal_page.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -11,7 +14,12 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final int _totalSteps = 3;
+  int _currentStep = 0;
+  final PageController _pageController = PageController();
+  final _basicInfoFormKey = GlobalKey<FormState>();
+  final _targetFormKey = GlobalKey<FormState>();
+  final _targetWeightController = TextEditingController();
   final _ageController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
@@ -21,7 +29,85 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     _ageController.dispose();
     _heightController.dispose();
     _weightController.dispose();
+    _targetWeightController.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  void _nextStep() {
+    if (_currentStep < _totalSteps - 1) {
+      setState(() {
+        ++_currentStep;
+      });
+      _pageController.animateToPage(
+        _currentStep,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      setState(() {
+        --_currentStep;
+      });
+      _pageController.animateToPage(
+        _currentStep,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  bool _canProceedFromCurrentStep() {
+    final profile = ref.watch(profileProvider).valueOrNull;
+    if (profile == null) {
+      return false;
+    }
+    switch (_currentStep) {
+      case 0:
+        return profile.gender.isNotEmpty &&
+            _ageController.text.isNotEmpty &&
+            _heightController.text.isNotEmpty &&
+            _weightController.text.isNotEmpty &&
+            _basicInfoFormKey.currentState?.validate() == true;
+      case 1:
+        return profile.activityLevel.isNotEmpty;
+      case 2:
+        if (profile.goal.isEmpty) {
+          return false;
+        }
+        if (profile.goal == "lose" || profile.goal == "gain") {
+          return _targetWeightController.text.trim().isNotEmpty &&
+              (_targetFormKey.currentState?.validate() ?? false);
+        }
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  void _handleNextStep() {
+    final viewModel = ref.read(profileProvider.notifier);
+
+    if (_currentStep == 0) {
+      _nextStep();
+    } else if (_currentStep == 1) {
+      _nextStep();
+    } else if (_currentStep == 2) {
+      final profile = ref.read(profileProvider).valueOrNull;
+      final needsTargetWeight =
+          profile?.goal == "lose" || profile?.goal == "gain";
+
+      if (needsTargetWeight) {
+        if (_targetFormKey.currentState!.validate()) {
+          viewModel.submitProfile(context);
+        }
+      } else {
+        viewModel.submitProfile(context);
+      }
+    }
   }
 
   @override
@@ -29,10 +115,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final viewModel = ref.read(profileProvider.notifier);
     final profileState = ref.watch(profileProvider);
 
-    // Cache theme values
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
-    final secondaryColor = theme.colorScheme.secondary;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -49,231 +133,60 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         ),
       ),
       body: profileState.when(
-        data: (profile) => SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  "Để tính toán chính xác nhu cầu dinh dưỡng, chúng tôi cần một số thông tin cơ bản về bạn",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 24),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Giới tính",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+        data: (profile) => Column(
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 30),
+              child: Row(
+                children: List.generate(
+                  _totalSteps,
+                  (index) => Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: EdgeInsets.only(
+                        right: index < _totalSteps - 1 ? 8 : 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: index <= _currentStep
+                            ? primaryColor
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => viewModel.updateGender("male"),
-                            child: Container(
-                              padding: EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: profile.gender == "male"
-                                    ? primaryColor.withValues(alpha: 0.1)
-                                    : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: profile.gender == "male"
-                                      ? primaryColor
-                                      : Colors.grey[300]!,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.male,
-                                    size: 26,
-                                    color: profile.gender == "male"
-                                        ? primaryColor
-                                        : Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "Nam",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: profile.gender == "male"
-                                          ? primaryColor
-                                          : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => viewModel.updateGender("female"),
-                            child: Container(
-                              padding: EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: profile.gender == "female"
-                                    ? secondaryColor.withValues(alpha: 0.1)
-                                    : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: profile.gender == "female"
-                                      ? secondaryColor
-                                      : Colors.grey[300]!,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.female,
-                                    size: 26,
-                                    color: profile.gender == "female"
-                                        ? secondaryColor
-                                        : Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "Nữ",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: profile.gender == "female"
-                                          ? secondaryColor
-                                          : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _ageController,
-                        keyboardType: TextInputType.number,
-                        autocorrect: false,
-                        validator: viewModel.validateAge,
-                        decoration: InputDecoration(
-                          labelText: "Tuổi",
-                          labelStyle: TextStyle(fontSize: 15),
-                          prefixIcon: const Icon(Icons.cake_outlined, size: 26),
-                          suffixText: "tuổi",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: const BorderSide(width: 1.3),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _heightController,
-                              keyboardType: TextInputType.number,
-                              autocorrect: false,
-                              validator: viewModel.validateHeight,
-                              decoration: InputDecoration(
-                                labelText: "Chiều cao",
-                                labelStyle: TextStyle(fontSize: 15),
-                                prefixIcon: const Icon(Icons.height, size: 26),
-                                suffixText: "cm",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(width: 1.3),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _weightController,
-                              keyboardType: TextInputType.number,
-                              autocorrect: false,
-                              validator: viewModel.validateWeight,
-                              decoration: InputDecoration(
-                                labelText: "Cân nặng",
-                                labelStyle: TextStyle(fontSize: 15),
-                                prefixIcon: const Icon(
-                                  Icons.monitor_weight_outlined,
-                                  size: 26,
-                                ),
-                                suffixText: "kg",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(width: 1.3),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (profile.gender.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Vui lòng chọn giới tính'),
-                                backgroundColor: Colors.red,
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                            return;
-                          }
-
-                          if (_formKey.currentState!.validate()) {
-                            viewModel.updateAge(_ageController.text);
-                            viewModel.updateHeight(_heightController.text);
-                            viewModel.updateWeight(_weightController.text);
-                            viewModel.submitProfile(context);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 48),
-                          elevation: 8,
-                          backgroundColor: primaryColor,
-                        ),
-                        child: Text(
-                          "Tiếp tục",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (step) {
+                  setState(() {
+                    _currentStep = step;
+                  });
+                },
+                children: [
+                  BasicInfoPage(
+                    profile: profile,
+                    viewModel: viewModel,
+                    formKey: _basicInfoFormKey,
+                    ageController: _ageController,
+                    heightController: _heightController,
+                    weightController: _weightController,
+                  ),
+                  ActivityLevelPage(profile: profile, viewModel: viewModel),
+                  GoalPage(
+                    profile: profile,
+                    viewModel: viewModel,
+                    targetWeightController: _targetWeightController,
+                    targetFormKey: _targetFormKey,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         loading: () => const SplashScreen(),
         error: (error, _) => Center(
@@ -302,6 +215,66 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: profileState.when(
+        data: (profile) => Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.2),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: _currentStep == 0 ? null : _previousStep,
+                  icon: Icon(Icons.arrow_back),
+                  style: IconButton.styleFrom(
+                    side: BorderSide(
+                      color: _currentStep == 0 ? Colors.grey : primaryColor,
+                    ),
+                    foregroundColor: primaryColor,
+                    minimumSize: const Size(0, 44),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton(
+                    onPressed: _canProceedFromCurrentStep()
+                        ? _handleNextStep
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 45),
+                      elevation: 8,
+                      backgroundColor: primaryColor,
+                    ),
+                    child: Text(
+                      _currentStep == _totalSteps - 1
+                          ? "Hoàn thành"
+                          : "Tiếp tục",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        error: (_, _) => null,
+        loading: () => null,
       ),
     );
   }
