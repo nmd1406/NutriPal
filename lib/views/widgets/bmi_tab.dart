@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/bmi_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
+import 'package:nutripal/views/screens/splash_screen.dart';
 import 'package:nutripal/views/widgets/bmi_indicator.dart';
 
 class BMITab extends ConsumerStatefulWidget {
@@ -54,7 +55,34 @@ class _BMITabState extends ConsumerState<BMITab> {
     Size deviceSize = MediaQuery.of(context).size;
     final bmiState = ref.watch(bmiViewModelProvider);
     final bmiViewModel = ref.read(bmiViewModelProvider.notifier);
+    final profileState = ref.watch(profileProvider);
 
+    return profileState.when(
+      data: (profile) =>
+          _buildBMIContent(context, deviceSize, bmiState, bmiViewModel),
+      loading: () => const SplashScreen(),
+      error: (error, stackTrace) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, color: Colors.red, size: 48),
+            SizedBox(height: 16),
+            Text(
+              'Có lỗi xảy ra khi tải dữ liệu',
+              style: TextStyle(color: Colors.red),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBMIContent(
+    BuildContext context,
+    Size deviceSize,
+    BMIState bmiState,
+    BMIViewModel bmiViewModel,
+  ) {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 46),
@@ -96,14 +124,29 @@ class _BMITabState extends ConsumerState<BMITab> {
                   child: Column(
                     children: [
                       Text(
-                        _formatDouble(bmiState.displayProfile!.bmi, 1),
+                        bmiState.displayProfile != null
+                            ? _formatDouble(bmiState.displayProfile!.bmi, 1)
+                            : "0.0",
                         style: TextStyle(
                           fontSize: 76,
                           color: Theme.of(context).primaryColorDark,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      BMIIndicator(profile: bmiState.displayProfile!),
+                      bmiState.displayProfile != null
+                          ? BMIIndicator(profile: bmiState.displayProfile!)
+                          : SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "Đang tải...",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
                     ],
                   ),
                 ),
