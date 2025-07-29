@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show Colors, Color;
+import 'package:flutter/material.dart' show Colors, Color, IconData, Icons;
 
 class Profile {
   final String uid;
@@ -6,8 +6,8 @@ class Profile {
   final int age;
   final double height;
   final double weight;
-  final String activityLevel;
-  final String goal;
+  final ActivityLevel? activityLevel;
+  final Goal? goal;
   final double targetWeight;
 
   const Profile({
@@ -16,8 +16,8 @@ class Profile {
     required this.age,
     required this.height,
     required this.weight,
-    this.activityLevel = '',
-    this.goal = '',
+    this.activityLevel,
+    this.goal,
     this.targetWeight = 0.0,
   });
 
@@ -27,8 +27,8 @@ class Profile {
     int? age,
     double? height,
     double? weight,
-    String? activityLevel,
-    String? goal,
+    ActivityLevel? activityLevel,
+    Goal? goal,
     double? targetWeight,
   }) {
     return Profile(
@@ -65,8 +65,8 @@ class Profile {
       age: json['age'] as int,
       height: (json['height'] as num).toDouble(),
       weight: (json['weight'] as num).toDouble(),
-      activityLevel: json['activityLevel'] as String? ?? '',
-      goal: json['goal'] as String? ?? '',
+      activityLevel: ActivityLevel.fromValue(json['activityLevel'] as String),
+      goal: Goal.fromValue(json['goal'] as String),
       targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0.0,
     );
   }
@@ -78,8 +78,8 @@ class Profile {
       age: 0,
       height: 0,
       weight: 0,
-      activityLevel: "",
-      goal: "",
+      activityLevel: null,
+      goal: null,
       targetWeight: 0.0,
     );
   }
@@ -87,11 +87,10 @@ class Profile {
   bool get isValid {
     bool basicInfoValid =
         gender.isNotEmpty && age > 0 && height > 0 && weight > 0;
-    bool activityValid = activityLevel.isNotEmpty;
-    bool goalValid = goal.isNotEmpty;
+    bool activityValid = activityLevel != null;
+    bool goalValid = goal != null;
 
-    // If goal is gain or lose, target weight must be set
-    if (goal == 'gain' || goal == 'lose') {
+    if (goal == Goal.gain || goal == Goal.lose) {
       goalValid = goalValid && targetWeight > 0;
     }
 
@@ -103,8 +102,8 @@ class Profile {
         age == 0 &&
         height == 0 &&
         weight == 0 &&
-        activityLevel.isEmpty &&
-        goal.isEmpty &&
+        activityLevel == null &&
+        goal == null &&
         targetWeight == 0;
   }
 
@@ -197,3 +196,101 @@ class Profile {
 }
 
 enum BMICategory { underweight, normal, overweight, obeseI, obeseII }
+
+enum ActivityLevel {
+  sedentary(
+    value: "sedentary",
+    title: "Ít vận động",
+    description: "Làm việc văn phòng, ít hoạt động thể chất",
+    icon: Icons.airline_seat_recline_normal,
+  ),
+  light(
+    value: "light",
+    title: "Vận động nhẹ",
+    description: "1-3 ngày/tuần tập thể dục nhẹ",
+    icon: Icons.directions_walk,
+  ),
+  moderate(
+    value: "moderate",
+    title: "Vận động trung bình",
+    description: "3-5 ngày/tuần tập thể dục vừa phải",
+    icon: Icons.directions_run,
+  ),
+  active(
+    value: "active",
+    title: "Vận động nhiều",
+    description: "6-7 ngày/tuần tập thể dục nặng",
+    icon: Icons.fitness_center,
+  ),
+  veryActive(
+    value: "veryActive",
+    title: "Rất năng động",
+    description: "Tập thể dục nặng hàng ngày + công việc thể chất",
+    icon: Icons.sports_gymnastics,
+  );
+
+  const ActivityLevel({
+    required this.value,
+    required this.title,
+    required this.description,
+    required this.icon,
+  });
+
+  final String value;
+  final String title;
+  final String description;
+  final IconData icon;
+
+  static ActivityLevel? fromValue(String value) {
+    for (ActivityLevel activityLevel in ActivityLevel.values) {
+      if (activityLevel.value == value) {
+        return activityLevel;
+      }
+    }
+    return null;
+  }
+}
+
+enum Goal {
+  lose(
+    value: "lose",
+    title: "Giảm cân",
+    icon: Icons.trending_down,
+    color: Colors.red,
+  ),
+  maintain(
+    value: "maintain",
+    title: 'Duy trì cân nặng',
+    icon: Icons.balance,
+    color: Colors.blue,
+  ),
+  gain(
+    value: "gain",
+    title: 'Tăng cân',
+    icon: Icons.trending_up,
+    color: Colors.green,
+  );
+
+  const Goal({
+    required this.value,
+    required this.title,
+    required this.icon,
+    required this.color,
+  });
+
+  final String value;
+  final String title;
+  final IconData icon;
+  final Color color;
+
+  static Goal? fromValue(String value) {
+    for (Goal goal in Goal.values) {
+      if (goal.value == value) {
+        return goal;
+      }
+    }
+    return null;
+  }
+
+  bool get needsTargetWeight => this == Goal.lose || this == Goal.gain;
+}

@@ -2,39 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 
-const List<Map<String, dynamic>> activities = [
-  {
-    'value': 'sedentary',
-    'title': 'Ít vận động',
-    'description': 'Làm việc văn phòng, ít hoạt động thể chất',
-    'icon': Icons.airline_seat_recline_normal,
-  },
-  {
-    'value': 'light',
-    'title': 'Vận động nhẹ',
-    'description': '1-3 ngày/tuần tập thể dục nhẹ',
-    'icon': Icons.directions_walk,
-  },
-  {
-    'value': 'moderate',
-    'title': 'Vận động trung bình',
-    'description': '3-5 ngày/tuần tập thể dục vừa phải',
-    'icon': Icons.directions_run,
-  },
-  {
-    'value': 'active',
-    'title': 'Vận động nhiều',
-    'description': '6-7 ngày/tuần tập thể dục nặng',
-    'icon': Icons.fitness_center,
-  },
-  {
-    'value': 'very_active',
-    'title': 'Rất năng động',
-    'description': 'Tập thể dục nặng hàng ngày + công việc thể chất',
-    'icon': Icons.sports_gymnastics,
-  },
-];
-
 class ActivityLevelPage extends StatelessWidget {
   final ProfileViewModel viewModel;
   final Profile profile;
@@ -64,12 +31,10 @@ class ActivityLevelPage extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 15),
-            ...activities.map((activity) {
-              final isSelected =
-                  profile.activityLevel == activity["value"] as String;
+            ...ActivityLevel.values.map((activity) {
+              final isSelected = profile.activityLevel == activity;
               return GestureDetector(
-                onTap: () =>
-                    viewModel.updateActivityLevel(activity["value"] as String),
+                onTap: () => viewModel.updateActivityLevel(activity.value),
                 child: Container(
                   margin: const EdgeInsets.all(12),
                   padding: const EdgeInsets.all(10),
@@ -86,7 +51,7 @@ class ActivityLevelPage extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        activity["icon"] as IconData,
+                        activity.icon,
                         size: 32,
                         color: isSelected ? primaryColor : Colors.grey,
                       ),
@@ -96,7 +61,7 @@ class ActivityLevelPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              activity["title"] as String,
+                              activity.title,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -106,7 +71,7 @@ class ActivityLevelPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              activity["description"] as String,
+                              activity.description,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isSelected

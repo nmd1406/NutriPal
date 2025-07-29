@@ -56,13 +56,17 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
   void updateActivityLevel(String activityLevel) {
     final currentProfile = state.valueOrNull ?? Profile.empty();
     state = AsyncValue.data(
-      currentProfile.copyWith(activityLevel: activityLevel),
+      currentProfile.copyWith(
+        activityLevel: ActivityLevel.fromValue(activityLevel),
+      ),
     );
   }
 
   void updateGoal(String goal) {
     final currentProfile = state.valueOrNull ?? Profile.empty();
-    state = AsyncValue.data(currentProfile.copyWith(goal: goal));
+    state = AsyncValue.data(
+      currentProfile.copyWith(goal: Goal.fromValue(goal)),
+    );
   }
 
   void updateTargetWeight(String targetWeightStr) {

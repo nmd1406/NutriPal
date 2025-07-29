@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/screens/splash_screen.dart';
 import 'package:nutripal/views/widgets/activity_level_page.dart';
@@ -73,12 +74,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             _weightController.text.isNotEmpty &&
             _basicInfoFormKey.currentState?.validate() == true;
       case 1:
-        return profile.activityLevel.isNotEmpty;
+        return profile.activityLevel != null;
       case 2:
-        if (profile.goal.isEmpty) {
+        if (profile.goal == null) {
           return false;
         }
-        if (profile.goal == "lose" || profile.goal == "gain") {
+        if (profile.goal == Goal.lose || profile.goal == Goal.gain) {
           return _targetWeightController.text.trim().isNotEmpty &&
               (_targetFormKey.currentState?.validate() ?? false);
         }
@@ -98,7 +99,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     } else if (_currentStep == 2) {
       final profile = ref.read(profileProvider).valueOrNull;
       final needsTargetWeight =
-          profile?.goal == "lose" || profile?.goal == "gain";
+          profile?.goal == Goal.lose || profile?.goal == Goal.gain;
 
       if (needsTargetWeight) {
         if (_targetFormKey.currentState!.validate()) {

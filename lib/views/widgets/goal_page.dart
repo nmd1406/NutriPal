@@ -1,29 +1,7 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
-
-const List<Map<String, dynamic>> goals = [
-  {
-    'value': 'lose',
-    'title': 'Giảm cân',
-    'icon': Icons.trending_down,
-    'color': Colors.red,
-  },
-  {
-    'value': 'maintain',
-    'title': 'Duy trì cân nặng',
-    'icon': Icons.balance,
-    'color': Colors.blue,
-  },
-  {
-    'value': 'gain',
-    'title': 'Tăng cân',
-    'icon': Icons.trending_up,
-    'color': Colors.green,
-  },
-];
 
 class GoalPage extends StatefulWidget {
   final Profile profile;
@@ -65,7 +43,7 @@ class _GoalPageState extends State<GoalPage> {
   @override
   Widget build(BuildContext context) {
     final needsTargetWeight =
-        widget.profile.goal == "gain" || widget.profile.goal == "lose";
+        widget.profile.goal == Goal.gain || widget.profile.goal == Goal.lose;
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -77,13 +55,15 @@ class _GoalPageState extends State<GoalPage> {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
-            ...goals.map((goal) {
-              final isSelected = widget.profile.goal == goal["value"] as String;
+            ...Goal.values.map((goal) {
+              final isSelected = widget.profile.goal == goal;
               return GestureDetector(
                 onTap: () {
-                  widget.viewModel.updateGoal(goal["value"] as String);
+                  widget.viewModel.updateGoal(goal.value);
                   if (needsTargetWeight) {
                     widget.targetWeightController.clear();
+                  } else {
+                    widget.viewModel.updateTargetWeight("0.0");
                   }
                 },
                 child: Container(
@@ -91,34 +71,28 @@ class _GoalPageState extends State<GoalPage> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (goal["color"] as Color).withValues(alpha: 0.2)
+                        ? goal.color.withValues(alpha: 0.2)
                         : Colors.grey[50],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? (goal["color"] as Color)
-                          : Colors.grey[300]!,
+                      color: isSelected ? goal.color : Colors.grey[300]!,
                       width: 2,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        goal["icon"] as IconData,
+                        goal.icon,
                         size: 32,
-                        color: isSelected
-                            ? goal["color"] as Color
-                            : Colors.grey,
+                        color: isSelected ? goal.color : Colors.grey,
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        goal["title"] as String,
+                        goal.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? goal["color"] as Color
-                              : Colors.grey[800],
+                          color: isSelected ? goal.color : Colors.grey[800],
                         ),
                       ),
                       isSelected ? const Spacer() : const SizedBox.shrink(),
@@ -126,7 +100,7 @@ class _GoalPageState extends State<GoalPage> {
                         Icon(
                           Icons.check_circle_outline,
                           size: 24,
-                          color: goal["color"] as Color,
+                          color: goal.color,
                         ),
                     ],
                   ),
@@ -154,7 +128,7 @@ class _GoalPageState extends State<GoalPage> {
                         borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(width: 2),
                       ),
-                      helperText: widget.profile.goal == "lose"
+                      helperText: widget.profile.goal == Goal.lose
                           ? "Nhập cân nặng mà bạn muốn giảm"
                           : "Nhập cân nặng mà bạn muốn tăng",
                     ),
