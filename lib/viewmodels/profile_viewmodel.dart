@@ -129,11 +129,11 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
 
     final currentProfile = state.valueOrNull ?? Profile.empty();
 
-    if (currentProfile.goal == "gain" &&
+    if (currentProfile.goal == Goal.gain &&
         targetWeight <= currentProfile.weight) {
       return "Cân nặng mục tiêu phải lớn hơn cân nặng hiện tại";
     }
-    if (currentProfile.goal == "lose" &&
+    if (currentProfile.goal == Goal.lose &&
         targetWeight >= currentProfile.weight) {
       return "Cân nặng mục tiêu phải bé hơn cân nặng hiện tại";
     }
