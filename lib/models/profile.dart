@@ -193,6 +193,78 @@ class Profile {
   ) {
     return baseProfile.copyWith(height: height, weight: weight);
   }
+
+  double get bmr {
+    if (!isValid) {
+      return 0;
+    }
+
+    if (gender.toLowerCase() == "male") {
+      return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+    }
+    return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+  }
+
+  double get tdee {
+    if (!isValid) {
+      return 0;
+    }
+
+    double multiplier;
+    switch (activityLevel!) {
+      case ActivityLevel.sedentary:
+        multiplier = 1.2;
+        break;
+      case ActivityLevel.light:
+        multiplier = 1.375;
+        break;
+      case ActivityLevel.moderate:
+        multiplier = 1.55;
+        break;
+      case ActivityLevel.active:
+        multiplier = 1.725;
+        break;
+      case ActivityLevel.veryActive:
+        multiplier = 1.9;
+        break;
+    }
+
+    return _adjustedCalories(bmr * multiplier);
+  }
+
+  double _adjustedCalories(double tdee) {
+    if (!isValid) {
+      return 0;
+    }
+
+    switch (goal!) {
+      case Goal.maintain:
+        return tdee;
+      case Goal.lose:
+        return (tdee - _deficit).clamp(1200, tdee);
+      case Goal.gain:
+        return tdee + _surplus;
+    }
+  }
+
+  double get _deficit {
+    double weightDifference = weight - targetWeight;
+    // 0.5kg/week
+    double weeksToGoal = (weightDifference * 2).clamp(12, 52);
+    // 1kg = 7700cal
+    double dailyDeficit = (weightDifference * 7700) / (weeksToGoal * 7);
+
+    return dailyDeficit.clamp(300, 750);
+  }
+
+  double get _surplus {
+    double weightDifference = targetWeight - weight;
+    // 0.33kg/week
+    double weeksToGoal = (weightDifference * 3).clamp(16, 52);
+    double dailySurplus = (weightDifference * 7700) / (weeksToGoal * 7);
+
+    return dailySurplus.clamp(300, 500);
+  }
 }
 
 enum BMICategory { underweight, normal, overweight, obeseI, obeseII }

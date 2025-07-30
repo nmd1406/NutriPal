@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:nutripal/models/profile.dart' show Goal, ActivityLevel;
 
 class TDEECard extends StatelessWidget {
-  const TDEECard({super.key});
+  final double tdee;
+  final Goal goal;
+  final ActivityLevel activityLevel;
+
+  const TDEECard({
+    super.key,
+    required this.tdee,
+    required this.activityLevel,
+    required this.goal,
+  });
+
+  String _formatDouble(double value) {
+    return value.round().toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +65,7 @@ class TDEECard extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  "2,629",
+                  _formatDouble(tdee),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 36,
@@ -79,7 +93,7 @@ class TDEECard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "BMR",
+                    "Mục tiêu",
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,
@@ -87,9 +101,9 @@ class TDEECard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "1,696 cal",
+                    goal.title,
                     style: TextStyle(
-                      color: Colors.black87,
+                      color: goal.color,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -108,7 +122,7 @@ class TDEECard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "Vừa phải",
+                    activityLevel.title,
                     style: TextStyle(
                       color: Colors.black87,
                       fontSize: 18,
