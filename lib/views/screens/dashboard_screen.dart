@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/auth_viewmodel.dart';
+import 'package:nutripal/views/widgets/calories_card.dart';
+import 'package:nutripal/views/widgets/macros_card.dart';
+import 'package:nutripal/views/widgets/water_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -10,11 +13,11 @@ class DashboardScreen extends ConsumerWidget {
     final authState = ref.watch(authViewModelProvider);
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 70,
+        toolbarHeight: 80,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12, top: 18),
-            child: IconButton.filled(
+            child: IconButton(
               onPressed: () {},
               style: IconButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
@@ -31,7 +34,11 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Text(
                   "Chào mừng,",
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   user?.username ?? "User",
@@ -46,6 +53,28 @@ class DashboardScreen extends ConsumerWidget {
           ),
           error: (_, _) => const Text("Lỗi"),
           loading: () => const Text("Đang tải..."),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 15),
+          child: Column(
+            children: [
+              const SizedBox(height: 28),
+              CaloriesCard(baseGoal: 1780, food: 700),
+              const SizedBox(height: 20),
+              MacrosCard(
+                baseCarb: 100,
+                carbIntake: 54,
+                baseFat: 82,
+                fatIntake: 42,
+                baseProtein: 200,
+                proteinIntake: 154,
+              ),
+              const SizedBox(height: 20),
+              WaterCard(goal: 2500, currentIntake: 1800),
+            ],
+          ),
         ),
       ),
     );
