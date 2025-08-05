@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/models/meal_record.dart';
+import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_food_screen.dart';
 
-class MealDiaryCard extends StatelessWidget {
-  final String title;
+class MealDiaryCard extends ConsumerWidget {
+  final Meal meal;
 
-  const MealDiaryCard({super.key, required this.title});
+  const MealDiaryCard({super.key, required this.meal});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mealTrackingState = ref.watch(mealTrackingViewModelProvider);
+
+    // Lấy records theo meal type
+    final mealRecords = meal == Meal.breakfast
+        ? mealTrackingState.breakfastRecords
+        : meal == Meal.lunch
+        ? mealTrackingState.lunchRecords
+        : meal == Meal.dinner
+        ? mealTrackingState.dinnerRecords
+        : mealTrackingState.snackRecords;
+
+    // Lấy total calories theo meal type
+    final totalCalories = meal == Meal.breakfast
+        ? mealTrackingState.breakfastCalories
+        : meal == Meal.lunch
+        ? mealTrackingState.lunchCalories
+        : meal == Meal.dinner
+        ? mealTrackingState.dinnerCalories
+        : mealTrackingState.snackCalories;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -36,24 +59,78 @@ class MealDiaryCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  title,
+                  meal.title,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 Text(
-                  "200",
+                  "${totalCalories.toStringAsFixed(1)} cal",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
           const Divider(thickness: 1),
+          mealRecords.isEmpty
+              ? const SizedBox.shrink()
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: mealRecords.length,
+                  itemBuilder: (context, index) {
+                    final MealRecord mealRecord = mealRecords[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 16,
+                        bottom: 3,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  mealRecord.food.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  "Khẩu phần: ${mealRecord.servingAmount}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "${mealRecord.totalCalories.toStringAsFixed(1)} cal",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+          mealRecords.isEmpty
+              ? const SizedBox.shrink()
+              : const Divider(thickness: 1),
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: TextButton(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => AddFoodScreen(title: title),
+                  builder: (context) => AddFoodScreen(meal: meal),
                 ),
               ),
               child: Text("Thêm", style: TextStyle(fontSize: 16)),
