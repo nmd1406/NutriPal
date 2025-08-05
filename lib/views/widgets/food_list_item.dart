@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:nutripal/models/food.dart';
+import 'package:nutripal/views/screens/food_screen.dart';
 
 class FoodListItem extends StatelessWidget {
-  final String name;
-  final String category;
+  final Food food;
+  final VoidCallback onAdd;
 
-  const FoodListItem({super.key, required this.name, required this.category});
+  const FoodListItem({super.key, required this.food, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +15,7 @@ class FoodListItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: primaryColor, width: 2),
+        color: primaryColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -26,16 +27,29 @@ class FoodListItem extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        leading: SizedBox(
-          height: 50,
-          width: 50,
-          child: Image.asset("assets/images/images.jpg"),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => FoodScreen(food: food))),
+        title: Text(
+          food.name,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        title: Text(name),
-        subtitle: Text(category),
+        subtitle: Text(
+          "${food.category} • ${food.caloriesPerServing.toStringAsFixed(0)} cal, ${food.servingSize.toStringAsFixed(0)} ${food.servingUnit}",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+        ),
         trailing: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.add, color: primaryColor),
+          onPressed: () {
+            onAdd();
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Thêm thành công"),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          },
+          icon: Icon(Icons.add, color: Colors.white),
         ),
       ),
     );
