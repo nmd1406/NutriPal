@@ -42,7 +42,39 @@ class MainScreen extends ConsumerWidget {
       ),
       floatingActionButton: IconButton.filled(
         iconSize: 40,
-        onPressed: () {},
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => Container(
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(
+                        Icons.restaurant,
+                        color: Colors.orange,
+                      ),
+                      title: Text("Thực phẩm"),
+                    ),
+                    ListTile(
+                      onTap: () {},
+                      leading: const Icon(Icons.water_drop, color: Colors.blue),
+                      title: Text("Nước"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
         icon: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

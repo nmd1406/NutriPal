@@ -26,7 +26,7 @@ class WaterProgressIndicator extends StatelessWidget {
       progressColor: Color.fromARGB(255, 38, 124, 228),
       circularStrokeCap: CircularStrokeCap.round,
       center: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(

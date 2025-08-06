@@ -13,23 +13,8 @@ class MealDiaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mealTrackingState = ref.watch(mealTrackingViewModelProvider);
 
-    // Lấy records theo meal type
-    final mealRecords = meal == Meal.breakfast
-        ? mealTrackingState.breakfastRecords
-        : meal == Meal.lunch
-        ? mealTrackingState.lunchRecords
-        : meal == Meal.dinner
-        ? mealTrackingState.dinnerRecords
-        : mealTrackingState.snackRecords;
-
-    // Lấy total calories theo meal type
-    final totalCalories = meal == Meal.breakfast
-        ? mealTrackingState.breakfastCalories
-        : meal == Meal.lunch
-        ? mealTrackingState.lunchCalories
-        : meal == Meal.dinner
-        ? mealTrackingState.dinnerCalories
-        : mealTrackingState.snackCalories;
+    final mealRecords = mealTrackingState.getMealRecords(meal);
+    final totalCalories = mealTrackingState.getTotalCaloriesForMeal(meal);
 
     return Container(
       width: double.infinity,
@@ -128,11 +113,14 @@ class MealDiaryCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => AddFoodScreen(meal: meal),
-                ),
-              ),
+              onPressed: () {
+                ref.read(currentMealProvider.notifier).state = meal;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => AddFoodScreen(meal: meal),
+                  ),
+                );
+              },
               child: Text("Thêm", style: TextStyle(fontSize: 16)),
             ),
           ),

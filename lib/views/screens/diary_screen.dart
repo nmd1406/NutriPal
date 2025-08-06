@@ -4,9 +4,9 @@ import 'package:nutripal/models/meal_record.dart';
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
-import 'package:nutripal/viewmodels/tdee_viewmodel.dart';
 import 'package:nutripal/views/widgets/date_selector.dart';
 import 'package:nutripal/views/widgets/meal_diary_card.dart';
+import 'package:nutripal/views/widgets/water_diary_card.dart';
 
 class DiaryScreen extends ConsumerStatefulWidget {
   const DiaryScreen({super.key});
@@ -172,6 +172,8 @@ class _DiaryScreenState extends ConsumerState<DiaryScreen> {
             MealDiaryCard(meal: Meal.dinner),
             const SizedBox(height: 10),
             MealDiaryCard(meal: Meal.snack),
+            const SizedBox(height: 10),
+            WaterDiary(),
             const SizedBox(height: 36),
             ElevatedButton(onPressed: () {}, child: Text("Cập nhật nhật ký")),
             SizedBox(height: MediaQuery.of(context).size.height * 0.1),
