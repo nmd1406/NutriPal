@@ -265,6 +265,57 @@ class Profile {
 
     return dailySurplus.clamp(300, 500);
   }
+
+  double get recommendedDailyWater {
+    if (!isValid) return 2000; // Default 2L
+
+    // Công thức chính: 30-35ml/kg
+    double baseWater = weight * 32;
+
+    // Điều chỉnh theo các yếu tố
+    double multiplier = 1.0;
+
+    // Giới tính
+    multiplier *= gender.toLowerCase() == "male" ? 1.05 : 1.0;
+
+    // Tuổi
+    if (age < 30) {
+      multiplier *= 1.05;
+    } else if (age > 65) {
+      multiplier *= 0.95;
+    }
+
+    // Hoạt động
+    if (activityLevel != null) {
+      switch (activityLevel!) {
+        case ActivityLevel.sedentary:
+          multiplier *= 1.0;
+          break;
+        case ActivityLevel.light:
+          multiplier *= 1.1;
+          break;
+        case ActivityLevel.moderate:
+          multiplier *= 1.2;
+          break;
+        case ActivityLevel.active:
+          multiplier *= 1.3;
+          break;
+        case ActivityLevel.veryActive:
+          multiplier *= 1.4;
+          break;
+      }
+    }
+
+    // BMI adjustment
+    if (bmi > 25) {
+      multiplier *= 1.1; // Người thừa cân cần nhiều nước hơn
+    }
+
+    double finalWater = baseWater * multiplier;
+
+    // Làm tròn đến 250ml gần nhất
+    return (finalWater / 250).round() * 250.0;
+  }
 }
 
 enum BMICategory { underweight, normal, overweight, obeseI, obeseII }
