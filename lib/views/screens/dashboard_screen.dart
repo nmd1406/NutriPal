@@ -72,7 +72,7 @@ class DashboardScreen extends ConsumerWidget {
                 proteinIntake: 154,
               ),
               const SizedBox(height: 20),
-              WaterCard(goal: 2500, currentIntake: 1800),
+              const WaterCard(),
             ],
           ),
         ),
