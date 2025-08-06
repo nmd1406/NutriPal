@@ -186,6 +186,8 @@ class MealTrackingViewModel extends StateNotifier<MealTrackingState> {
   }
 }
 
+final currentMealProvider = StateProvider<Meal>((ref) => Meal.breakfast);
+
 final mealTrackingViewModelProvider =
     StateNotifierProvider<MealTrackingViewModel, MealTrackingState>(
       (ref) => MealTrackingViewModel(),

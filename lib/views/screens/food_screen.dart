@@ -1,25 +1,28 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/models/food.dart';
 import 'package:intl/intl.dart';
+import 'package:nutripal/models/meal_record.dart';
+import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 
-class FoodScreen extends StatefulWidget {
+class FoodScreen extends ConsumerStatefulWidget {
   final Food food;
 
   const FoodScreen({super.key, required this.food});
 
   @override
-  State<FoodScreen> createState() => _FoodScreenState();
+  ConsumerState<FoodScreen> createState() => _FoodScreenState();
 }
 
-class _FoodScreenState extends State<FoodScreen> {
-  TimeOfDay? _selectedTime;
-  String _selectedMeal = "Bữa sáng";
+class _FoodScreenState extends ConsumerState<FoodScreen> {
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _servingController = TextEditingController(
     text: "1",
   );
 
-  double get servingAmount {
+  double get _servingAmount {
     final value = double.tryParse(_servingController.text);
     return value != null && value > 0 ? value : 1.0;
   }
@@ -48,11 +51,45 @@ class _FoodScreenState extends State<FoodScreen> {
     return formatter.format(dateTime);
   }
 
+  void _addFood(Meal selectedMeal) {
+    if (_formKey.currentState!.validate()) {
+      final now = DateTime.now();
+      final dateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
+
+      ref
+          .read(mealTrackingViewModelProvider.notifier)
+          .addFoodToMeal(
+            food: widget.food,
+            meal: selectedMeal,
+            servingAmount: _servingAmount,
+            consumedAt: dateTime,
+          );
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Thêm thành công"),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     const Divider divider = Divider(height: 24, thickness: 2);
     final deviceSize = MediaQuery.of(context).size;
+
+    Meal currentMeal = ref.watch(currentMealProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,10 +100,7 @@ class _FoodScreenState extends State<FoodScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              // Ghi nhận thực phẩm này vào List<Food> của bữa tương ứng
-              Navigator.of(context).pop();
-            },
+            onPressed: () => _addFood(currentMeal),
             icon: Icon(Icons.check, color: primaryColor, size: 32),
           ),
         ],
@@ -84,8 +118,8 @@ class _FoodScreenState extends State<FoodScreen> {
                     Text("Bữa", style: TextStyle(fontSize: 18)),
                     SizedBox(
                       width: deviceSize.width * 0.3,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedMeal,
+                      child: DropdownButtonFormField<Meal>(
+                        value: currentMeal,
                         padding: const EdgeInsets.only(left: 8),
                         style: TextStyle(
                           color: primaryColor,
@@ -93,27 +127,28 @@ class _FoodScreenState extends State<FoodScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                         items: [
-                          DropdownMenuItem<String>(
-                            value: "Bữa sáng",
+                          DropdownMenuItem<Meal>(
+                            value: Meal.breakfast,
                             child: Text("Bữa sáng"),
                           ),
-                          DropdownMenuItem<String>(
-                            value: "Bữa trưa",
+                          DropdownMenuItem<Meal>(
+                            value: Meal.lunch,
                             child: Text("Bữa trưa"),
                           ),
-                          DropdownMenuItem<String>(
-                            value: "Bữa tối",
+                          DropdownMenuItem<Meal>(
+                            value: Meal.dinner,
                             child: Text("Bữa tối"),
                           ),
-                          DropdownMenuItem<String>(
-                            value: "Bữa phụ",
+                          DropdownMenuItem<Meal>(
+                            value: Meal.snack,
                             child: Text("Bữa phụ"),
                           ),
                         ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedMeal = value!;
-                          });
+                        onChanged: (Meal? selectedMeal) {
+                          if (selectedMeal != null) {
+                            ref.read(currentMealProvider.notifier).state =
+                                selectedMeal;
+                          }
                         },
                       ),
                     ),
@@ -129,35 +164,38 @@ class _FoodScreenState extends State<FoodScreen> {
                     Text("Khẩu phần", style: TextStyle(fontSize: 18)),
                     SizedBox(
                       width: deviceSize.width * 0.12,
-                      child: TextFormField(
-                        controller: _servingController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "1-10";
-                          }
-                          double serving = double.tryParse(value) ?? 0.0;
-                          if (serving <= 0 || serving > 10) {
-                            return "1-10";
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 8,
+                      child: Form(
+                        key: _formKey,
+                        child: TextFormField(
+                          controller: _servingController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: primaryColor,
+                            fontWeight: FontWeight.w500,
                           ),
-                          isDense: true,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "1-10";
+                            }
+                            double serving = double.tryParse(value) ?? 0.0;
+                            if (serving <= 0 || serving > 10) {
+                              return "1-10";
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            isDense: true,
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                          },
                         ),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
                       ),
                     ),
                   ],
@@ -180,9 +218,7 @@ class _FoodScreenState extends State<FoodScreen> {
                         }
                       },
                       child: Text(
-                        _selectedTime == null
-                            ? "Chọn"
-                            : _formatTime(_selectedTime!),
+                        _formatTime(_selectedTime),
                         style: TextStyle(color: primaryColor, fontSize: 18),
                       ),
                     ),
@@ -211,7 +247,7 @@ class _FoodScreenState extends State<FoodScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "${(widget.food.caloriesPerServing * servingAmount).round()}",
+                                "${(widget.food.caloriesPerServing * _servingAmount).round()}",
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -236,19 +272,19 @@ class _FoodScreenState extends State<FoodScreen> {
                         _buildMacroLegend(
                           color: widget.food.carbColor,
                           label: "Carbs",
-                          value: widget.food.carb * servingAmount,
+                          value: widget.food.carb * _servingAmount,
                           percent: widget.food.carbPercent,
                         ),
                         _buildMacroLegend(
                           color: widget.food.fatColor,
                           label: "Fat",
-                          value: widget.food.fat * servingAmount,
+                          value: widget.food.fat * _servingAmount,
                           percent: widget.food.fatPercent,
                         ),
                         _buildMacroLegend(
                           color: widget.food.proteinColor,
                           label: "Protein",
-                          value: widget.food.protein * servingAmount,
+                          value: widget.food.protein * _servingAmount,
                           percent: widget.food.proteinPercent,
                         ),
                       ],
