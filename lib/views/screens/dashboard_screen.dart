@@ -61,7 +61,7 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             children: [
               const SizedBox(height: 28),
-              CaloriesCard(baseGoal: 1780, food: 700),
+              const CaloriesCard(),
               const SizedBox(height: 20),
               MacrosCard(
                 baseCarb: 100,
