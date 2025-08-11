@@ -316,6 +316,89 @@ class Profile {
     // Làm tròn đến 250ml gần nhất
     return (finalWater / 250).round() * 250.0;
   }
+
+  // Protein (g): 1.6 - 2.2g/kg
+  double get targetProtein {
+    if (!isValid) {
+      return 0;
+    }
+
+    double proteinPerKg;
+    switch (goal!) {
+      case Goal.lose:
+        proteinPerKg = 2.0;
+        break;
+      case Goal.maintain:
+        proteinPerKg = 1.6;
+        break;
+      case Goal.gain:
+        proteinPerKg = 1.8;
+        break;
+    }
+
+    if (activityLevel == ActivityLevel.active ||
+        activityLevel == ActivityLevel.veryActive) {
+      proteinPerKg += 0.2;
+    }
+
+    return goal == Goal.maintain
+        ? weight * proteinPerKg
+        : targetWeight * proteinPerKg;
+  }
+
+  // Fat(g): 20 - 35% tổng calories
+  double get targetFat {
+    if (!isValid) {
+      return 0;
+    }
+
+    double fatPercentage;
+    switch (goal!) {
+      case Goal.lose:
+        fatPercentage = 0.25;
+        break;
+      case Goal.gain:
+        fatPercentage = 0.3;
+        break;
+      case Goal.maintain:
+        fatPercentage = 0.28;
+        break;
+    }
+
+    // Fat: 9kcal/g
+    return (tdee * fatPercentage) / 9;
+  }
+
+  double get _carbCalories => 4;
+  double get _proteinCalories => 4;
+  double get _fatCalories => 9;
+
+  // Phần còn lại sau protein và fat
+  double get targetCarb {
+    if (!isValid) {
+      return 0;
+    }
+
+    double proteinCalories = _proteinCalories * targetProtein;
+    double fatCalories = _fatCalories * targetFat;
+    double remainingCalories = tdee - proteinCalories - fatCalories;
+
+    return remainingCalories / _carbCalories;
+  }
+
+  Map<String, double> get macroPercentagesTarget {
+    if (!isValid) {
+      return {"protein": 0, "carb": 0, "fat": 0};
+    }
+
+    double targetCalories = tdee;
+
+    return {
+      "protein": (targetProtein * _proteinCalories) / targetCalories * 100,
+      "carb": (targetCarb * _carbCalories) / targetCalories * 100,
+      "fat": (targetFat * _fatCalories) / targetCalories * 100,
+    };
+  }
 }
 
 enum BMICategory { underweight, normal, overweight, obeseI, obeseII }
