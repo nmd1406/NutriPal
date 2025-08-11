@@ -5,8 +5,8 @@ import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/widgets/date_selector.dart';
-import 'package:nutripal/views/widgets/meal_diary_card.dart';
-import 'package:nutripal/views/widgets/water_diary_card.dart';
+import 'package:nutripal/views/widgets/meal_diary_tile.dart';
+import 'package:nutripal/views/widgets/water_diary_tile.dart';
 
 class DiaryScreen extends ConsumerStatefulWidget {
   const DiaryScreen({super.key});
@@ -165,17 +165,22 @@ class _DiaryScreenState extends ConsumerState<DiaryScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            MealDiaryCard(meal: Meal.breakfast),
+            MealDiaryTile(meal: Meal.breakfast),
             const SizedBox(height: 10),
-            MealDiaryCard(meal: Meal.lunch),
+            MealDiaryTile(meal: Meal.lunch),
             const SizedBox(height: 10),
-            MealDiaryCard(meal: Meal.dinner),
+            MealDiaryTile(meal: Meal.dinner),
             const SizedBox(height: 10),
-            MealDiaryCard(meal: Meal.snack),
+            MealDiaryTile(meal: Meal.snack),
             const SizedBox(height: 10),
-            WaterDiary(),
+            const WaterDiaryTile(),
             const SizedBox(height: 36),
-            ElevatedButton(onPressed: () {}, child: Text("Cập nhật nhật ký")),
+            ElevatedButton(
+              onPressed: () {
+                // Lưu lên firebase
+              },
+              child: Text("Cập nhật nhật ký"),
+            ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.1),
           ],
         ),

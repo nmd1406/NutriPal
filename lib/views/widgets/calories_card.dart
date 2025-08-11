@@ -65,7 +65,7 @@ class CaloriesCard extends ConsumerWidget {
                       animation: true,
                       percent: progress.clamp(0, 1.0),
                       backgroundColor: Colors.grey.shade300,
-                      progressColor: primaryColor,
+                      progressColor: Colors.orange,
                       circularStrokeCap: CircularStrokeCap.round,
                       center: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -121,7 +121,7 @@ class CaloriesCard extends ConsumerWidget {
             );
           },
           error: (_, _) => const Text("Có lỗi..."),
-          loading: () => const CircularProgressIndicator(),
+          loading: () => const Center(child: CircularProgressIndicator()),
         ),
       ),
     );
