@@ -208,6 +208,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             return;
                                           }
 
+                                          // Store context trước async operation
+                                          final navigator = Navigator.of(
+                                            context,
+                                          );
+                                          final scaffoldMessenger =
+                                              ScaffoldMessenger.of(context);
                                           await resetPasswordNotifier
                                               .resetPassword(email);
 
@@ -216,10 +222,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           );
                                           if (currentState.hasValue &&
                                               !currentState.hasError) {
-                                            Navigator.of(context).pop();
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
+                                            navigator.pop();
+                                            scaffoldMessenger.showSnackBar(
                                               SnackBar(
                                                 content: Text(
                                                   "Liên kết đã được gửi. Hãy kiểm tra email của bạn.",
