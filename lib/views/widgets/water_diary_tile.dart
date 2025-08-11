@@ -5,14 +5,14 @@ import 'package:nutripal/models/water_record.dart';
 import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_water_screen.dart';
 
-class WaterDiary extends ConsumerStatefulWidget {
-  const WaterDiary({super.key});
+class WaterDiaryTile extends ConsumerStatefulWidget {
+  const WaterDiaryTile({super.key});
 
   @override
-  ConsumerState<WaterDiary> createState() => _WaterDiaryState();
+  ConsumerState<WaterDiaryTile> createState() => _WaterDiaryTileState();
 }
 
-class _WaterDiaryState extends ConsumerState<WaterDiary> {
+class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat.Hm();
@@ -56,7 +56,7 @@ class _WaterDiaryState extends ConsumerState<WaterDiary> {
                 ),
                 const Spacer(),
                 Text(
-                  "${waterTrackingState.totalAmount.toString()}ml",
+                  "${waterTrackingState.totalAmount.toInt()}ml",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
