@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/models/profile.dart';
+import 'package:nutripal/viewmodels/macro_tracking_viewmodel.dart';
+import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
-class MacrosCard extends StatelessWidget {
-  final double baseCarb;
-  final double carbIntake;
-  final double baseFat;
-  final double fatIntake;
-  final double baseProtein;
-  final double proteinIntake;
-
-  const MacrosCard({
-    super.key,
-    required this.baseCarb,
-    required this.carbIntake,
-    required this.baseFat,
-    required this.fatIntake,
-    required this.baseProtein,
-    required this.proteinIntake,
-  });
+class MacrosCard extends ConsumerWidget {
+  const MacrosCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
+
+    final profileState = ref.watch(profileProvider);
 
     return Container(
       width: double.infinity,
@@ -52,28 +43,37 @@ class MacrosCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildMacroIndicator(
-                  label: "Carb",
-                  baseValue: baseCarb,
-                  intakeValue: carbIntake,
-                  color: const Color.fromARGB(255, 44, 127, 47),
-                ),
-                _buildMacroIndicator(
-                  label: "Fat",
-                  baseValue: baseFat,
-                  intakeValue: fatIntake,
-                  color: Colors.deepPurple,
-                ),
-                _buildMacroIndicator(
-                  label: "Protein",
-                  baseValue: baseProtein,
-                  intakeValue: proteinIntake,
-                  color: Colors.amber,
-                ),
-              ],
+            profileState.when(
+              data: (Profile profile) {
+                final macroTrackingState = ref.watch(
+                  macroTrackingViewModelProvider,
+                );
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMacroIndicator(
+                      label: "Carb",
+                      goalValue: profile.targetCarb,
+                      intakeValue: macroTrackingState.carbIntake,
+                      color: const Color.fromARGB(255, 44, 127, 47),
+                    ),
+                    _buildMacroIndicator(
+                      label: "Fat",
+                      goalValue: profile.targetFat,
+                      intakeValue: macroTrackingState.fatIntake,
+                      color: Colors.deepPurple,
+                    ),
+                    _buildMacroIndicator(
+                      label: "Protein",
+                      goalValue: profile.targetProtein,
+                      intakeValue: macroTrackingState.proteinIntake,
+                      color: Colors.amber,
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => const Center(child: Text("Có lỗi xảy ra")),
             ),
           ],
         ),
@@ -83,12 +83,11 @@ class MacrosCard extends StatelessWidget {
 
   Widget _buildMacroIndicator({
     required String label,
-    required double baseValue,
+    required double goalValue,
     required double intakeValue,
     required Color color,
   }) {
-    double remaining = baseValue - intakeValue;
-    double progress = intakeValue / baseValue;
+    double progress = intakeValue / goalValue;
     return Column(
       children: [
         Text(
@@ -99,7 +98,7 @@ class MacrosCard extends StatelessWidget {
             fontSize: 18,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         CircularPercentIndicator(
           radius: 47,
           percent: progress.clamp(0, 1.0),
@@ -111,11 +110,11 @@ class MacrosCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                intakeValue.toString(),
+                intakeValue.toInt().toString(),
                 style: TextStyle(fontWeight: FontWeight.bold, color: color),
               ),
               Text(
-                "/${baseValue}g",
+                "/${goalValue.toInt()}g",
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   color: Colors.black54,
@@ -123,11 +122,6 @@ class MacrosCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          "${remaining}g còn lại",
-          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black54),
         ),
       ],
     );
