@@ -16,30 +16,30 @@ class DiaryScreen extends ConsumerStatefulWidget {
 }
 
 class _DiaryScreenState extends ConsumerState<DiaryScreen> {
-  DateTime selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime.now();
 
   void _previousDay() {
     setState(() {
-      selectedDate = selectedDate.subtract(const Duration(days: 1));
+      _selectedDate = _selectedDate.subtract(const Duration(days: 1));
     });
   }
 
   void _nextDay() {
     setState(() {
-      selectedDate = selectedDate.add(const Duration(days: 1));
+      _selectedDate = _selectedDate.add(const Duration(days: 1));
     });
   }
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-    if (picked != null && picked != selectedDate) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        selectedDate = picked;
+        _selectedDate = picked;
       });
     }
   }
@@ -54,7 +54,7 @@ class _DiaryScreenState extends ConsumerState<DiaryScreen> {
         child: Column(
           children: [
             DateSelector(
-              selectedDate: selectedDate,
+              selectedDate: _selectedDate,
               onPreviousDay: _previousDay,
               onNextDay: _nextDay,
               onDateTap: _selectDate,

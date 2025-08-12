@@ -19,13 +19,13 @@ class _HealthIndicatorScreenState extends ConsumerState<HealthIndicatorScreen>
 
   @override
   void initState() {
+    super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
     _tabController.addListener(() {
       setState(() {
         _currentIndex = _tabController.index;
       });
     });
-    super.initState();
   }
 
   @override

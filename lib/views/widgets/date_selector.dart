@@ -54,7 +54,7 @@ class DateSelector extends StatelessWidget {
     final String dayOfWeek = weekdays[selectedDate.weekday % 7];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 7.0),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1),
@@ -73,7 +73,7 @@ class DateSelector extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onPreviousDay,
-            icon: const Icon(Icons.chevron_left, size: 28),
+            icon: const Icon(Icons.chevron_left, size: 25),
             style: IconButton.styleFrom(
               backgroundColor: Colors.grey.shade100,
               shape: RoundedRectangleBorder(
@@ -111,7 +111,7 @@ class DateSelector extends StatelessWidget {
           ),
           IconButton(
             onPressed: onNextDay,
-            icon: const Icon(Icons.chevron_right, size: 28),
+            icon: const Icon(Icons.chevron_right, size: 25),
             style: IconButton.styleFrom(
               backgroundColor: Colors.grey.shade100,
               shape: RoundedRectangleBorder(

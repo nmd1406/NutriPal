@@ -128,7 +128,7 @@ class _BMITabState extends ConsumerState<BMITab> {
                             ? _formatDouble(bmiState.displayProfile!.bmi, 1)
                             : "0.0",
                         style: TextStyle(
-                          fontSize: 76,
+                          fontSize: 66,
                           color: Theme.of(context).primaryColorDark,
                           fontWeight: FontWeight.w900,
                         ),
