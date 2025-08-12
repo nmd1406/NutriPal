@@ -173,3 +173,23 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
 final profileProvider = AsyncNotifierProvider<ProfileViewModel, Profile>(
   () => ProfileViewModel(),
 );
+
+final tdeeProvider = Provider<double>((ref) {
+  final profileState = ref.watch(profileProvider);
+
+  return profileState.when(
+    data: (Profile profile) => profile.tdee,
+    error: (_, _) => 0,
+    loading: () => 0,
+  );
+});
+
+final targetMacrosProvider = Provider<Map<String, double>>((ref) {
+  final profileState = ref.watch(profileProvider);
+
+  return profileState.when(
+    data: (Profile profile) => profile.macroPercentagesTarget,
+    error: (_, _) => {"carb": 0, "fat": 0, "protein": 0},
+    loading: () => {"carb": 0, "fat": 0, "protein": 0},
+  );
+});

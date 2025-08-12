@@ -61,6 +61,11 @@ class MealTrackingState {
   double get totalDailyCalories =>
       breakfastCalories + lunchCalories + dinnerCalories + snackCalories;
 
+  double get breakfastPercentage => breakfastCalories / totalDailyCalories;
+  double get lunchPercentage => lunchCalories / totalDailyCalories;
+  double get dinnerPercentage => dinnerCalories / totalDailyCalories;
+  double get snackPercentage => snackCalories / totalDailyCalories;
+
   double get totalDailyCarbs {
     return mealRecords.values
         .expand((records) => records)
@@ -78,6 +83,14 @@ class MealTrackingState {
         .expand((records) => records)
         .fold(0.0, (sum, record) => sum + record.totalProtein);
   }
+
+  double get totalDailyCarbsPercentage =>
+      totalDailyCarbs * 4 / totalDailyCalories;
+  double get totalDailyFatPercentage => totalDailyFat * 9 / totalDailyCalories;
+  double get totalDailyProteinPercentage =>
+      totalDailyProtein * 4 / totalDailyCalories;
+
+  bool get isEmpty => mealRecords.isEmpty;
 }
 
 class MealTrackingViewModel extends StateNotifier<MealTrackingState> {
