@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/auth_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/screens/health_indicator_screen.dart';
+import 'package:nutripal/views/screens/nutrition_screen.dart';
 import 'package:nutripal/views/widgets/feature_list_tile.dart';
 import 'package:nutripal/views/widgets/info_card.dart';
 
@@ -82,6 +83,13 @@ class MoreScreen extends ConsumerWidget {
             loading: () => const Text("Đang tải..."),
           ),
 
+          FeatureListTile(
+            icon: Icons.pie_chart_outline,
+            title: "Dinh dưỡng",
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const NutritionScreen()),
+            ),
+          ),
           FeatureListTile(
             icon: Icons.health_and_safety_outlined,
             title: "Chỉ số sức khoẻ",
