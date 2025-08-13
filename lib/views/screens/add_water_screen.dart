@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/widgets/water_progress_indicator.dart';

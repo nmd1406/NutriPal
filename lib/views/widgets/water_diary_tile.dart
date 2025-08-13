@@ -29,8 +29,6 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = DateFormat.Hm();
-
     final waterTrackingState = ref.watch(waterTrackingViewModelProvider);
     final waterTrackingViewModel = ref.read(
       waterTrackingViewModelProvider.notifier,
