@@ -193,3 +193,13 @@ final targetMacrosProvider = Provider<Map<String, double>>((ref) {
     loading: () => {"carb": 0, "fat": 0, "protein": 0},
   );
 });
+
+final recommendedDailyWaterProvider = Provider<double>((ref) {
+  final profileState = ref.watch(profileProvider);
+
+  return profileState.when(
+    data: (Profile profile) => profile.recommendedDailyWater,
+    error: (_, _) => 0,
+    loading: () => 0,
+  );
+});

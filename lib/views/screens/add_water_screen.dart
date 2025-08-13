@@ -28,7 +28,11 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
     final deviceSize = MediaQuery.of(context).size;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final profileState = ref.watch(profileProvider);
+    final waterTrackingState = ref.watch(waterTrackingViewModelProvider);
+    final recommendedDailyWater = ref.watch(recommendedDailyWaterProvider);
+    final double currentIntake = waterTrackingState.totalAmount;
+    final double goal = recommendedDailyWater;
+    final double progress = currentIntake / goal;
 
     return Scaffold(
       appBar: AppBar(
@@ -43,23 +47,11 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              profileState.when(
-                data: (Profile profile) {
-                  final waterTrackingState = ref.watch(
-                    waterTrackingViewModelProvider,
-                  );
-                  final double currentIntake = waterTrackingState.totalAmount;
-                  final double goal = profile.recommendedDailyWater;
-                  final double progress = currentIntake / goal;
-                  return WaterProgressIndicator(
-                    currentIntake: currentIntake,
-                    goal: goal,
-                    radius: 88,
-                    progress: progress,
-                  );
-                },
-                error: (_, _) => const Text("Có lỗi"),
-                loading: () => const CircularProgressIndicator(),
+              WaterProgressIndicator(
+                currentIntake: currentIntake,
+                goal: goal,
+                radius: 88,
+                progress: progress,
               ),
 
               const SizedBox(height: 32),
@@ -176,7 +168,7 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
                             .read(waterTrackingViewModelProvider.notifier)
                             .addWaterRecord(
                               amount: _totalAmount,
-                              consumedAt: DateTime.now(),
+                              consumedAt: TimeOfDay.now(),
                             );
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +177,6 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
                             duration: Duration(seconds: 1),
                           ),
                         );
-                        Navigator.of(context).pop();
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
