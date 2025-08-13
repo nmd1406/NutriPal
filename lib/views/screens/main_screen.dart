@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/viewmodels/navigation_viewmodel.dart';
+import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
+import 'package:nutripal/views/screens/add_food_screen.dart';
+import 'package:nutripal/views/screens/add_water_screen.dart';
 import 'package:nutripal/views/screens/dashboard_screen.dart';
 import 'package:nutripal/views/screens/diary_screen.dart';
 import 'package:nutripal/views/screens/more_screen.dart';
@@ -57,7 +61,16 @@ class MainScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     ListTile(
-                      onTap: () {},
+                      onTap: () {
+                        ref
+                            .read(mealTrackingViewModelProvider.notifier)
+                            .changeSelectedDate(DateTime.now());
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const AddFoodScreen(),
+                          ),
+                        );
+                      },
                       leading: const Icon(
                         Icons.restaurant,
                         color: Colors.orange,
@@ -65,7 +78,16 @@ class MainScreen extends ConsumerWidget {
                       title: Text("Thực phẩm"),
                     ),
                     ListTile(
-                      onTap: () {},
+                      onTap: () {
+                        ref
+                            .read(waterTrackingViewModelProvider.notifier)
+                            .changeSelectedDate(DateTime.now());
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const AddWaterScreen(),
+                          ),
+                        );
+                      },
                       leading: const Icon(Icons.water_drop, color: Colors.blue),
                       title: Text("Nước"),
                     ),
