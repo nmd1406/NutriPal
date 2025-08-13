@@ -13,6 +13,20 @@ class WaterDiaryTile extends ConsumerStatefulWidget {
 }
 
 class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
+  String _formatTime(TimeOfDay time) {
+    final formatter = DateFormat.Hm();
+    DateTime temp = DateTime.now();
+    DateTime date = DateTime(
+      temp.year,
+      temp.month,
+      temp.day,
+      time.hour,
+      time.minute,
+    );
+
+    return formatter.format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat.Hm();
@@ -21,7 +35,7 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
     final waterTrackingViewModel = ref.read(
       waterTrackingViewModelProvider.notifier,
     );
-    final records = waterTrackingState.records;
+    final records = waterTrackingState.waterRecords;
 
     return Container(
       width: double.infinity,
@@ -139,7 +153,7 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
                               ),
                             ),
                             Text(
-                              formatter.format(record.consumedAt),
+                              _formatTime(record.consumedAt),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
