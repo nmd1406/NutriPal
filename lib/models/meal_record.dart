@@ -1,10 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:nutripal/models/food.dart';
 
 class MealRecord {
   final Food food;
   final double servingAmount;
   final Meal meal;
-  final DateTime? consumedAt;
+  final TimeOfDay consumedAt;
 
   const MealRecord({
     required this.food,
@@ -17,7 +18,7 @@ class MealRecord {
     Food? food,
     double? servingAmount,
     Meal? meal,
-    DateTime? consumedAt,
+    TimeOfDay? consumedAt,
   }) {
     return MealRecord(
       food: food ?? this.food,
@@ -32,12 +33,12 @@ class MealRecord {
       food: Food.empty(),
       servingAmount: 0,
       meal: Meal.breakfast,
-      consumedAt: null,
+      consumedAt: TimeOfDay.now(),
     );
   }
 
   // Validation methods
-  bool get isValid => servingAmount > 0 && consumedAt != null;
+  bool get isValid => servingAmount > 0;
   bool get isEmpty => servingAmount == 0;
 
   double get totalCalories => food.caloriesPerServing * servingAmount;
