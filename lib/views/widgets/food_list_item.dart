@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutripal/models/food.dart';
-import 'package:nutripal/views/screens/food_screen.dart';
+import 'package:nutripal/views/screens/edit_food_entry_screen.dart';
 
 class FoodListItem extends StatelessWidget {
   final Food food;
@@ -27,9 +27,11 @@ class FoodListItem extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => FoodScreen(food: food))),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EditFoodEntryScreen(food: food),
+          ),
+        ),
         title: Text(
           food.name,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),

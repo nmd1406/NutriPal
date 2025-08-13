@@ -6,16 +6,17 @@ import 'package:intl/intl.dart';
 import 'package:nutripal/models/meal_record.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 
-class FoodScreen extends ConsumerStatefulWidget {
+class EditFoodEntryScreen extends ConsumerStatefulWidget {
   final Food food;
 
-  const FoodScreen({super.key, required this.food});
+  const EditFoodEntryScreen({super.key, required this.food});
 
   @override
-  ConsumerState<FoodScreen> createState() => _FoodScreenState();
+  ConsumerState<EditFoodEntryScreen> createState() =>
+      _EditFoodEntryScreenState();
 }
 
-class _FoodScreenState extends ConsumerState<FoodScreen> {
+class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _servingController = TextEditingController(
@@ -38,11 +39,11 @@ class _FoodScreenState extends ConsumerState<FoodScreen> {
   }
 
   String _formatTime(TimeOfDay time) {
-    final now = DateTime.now();
+    final DateTime temp = DateTime.now();
     final dateTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
+      temp.year,
+      temp.month,
+      temp.day,
       time.hour,
       time.minute,
     );
@@ -53,22 +54,13 @@ class _FoodScreenState extends ConsumerState<FoodScreen> {
 
   void _addFood(Meal selectedMeal) {
     if (_formKey.currentState!.validate()) {
-      final now = DateTime.now();
-      final dateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _selectedTime.hour,
-        _selectedTime.minute,
-      );
-
       ref
           .read(mealTrackingViewModelProvider.notifier)
           .addFoodToMeal(
             food: widget.food,
             meal: selectedMeal,
             servingAmount: _servingAmount,
-            consumedAt: dateTime,
+            consumedAt: _selectedTime,
           );
 
       ScaffoldMessenger.of(context).clearSnackBars();
