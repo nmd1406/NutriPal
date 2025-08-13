@@ -11,7 +11,7 @@ import 'package:nutripal/views/widgets/food_list_item.dart';
 class AddFoodScreen extends ConsumerStatefulWidget {
   final Meal meal;
 
-  const AddFoodScreen({super.key, required this.meal});
+  const AddFoodScreen({super.key, this.meal = Meal.breakfast});
 
   @override
   ConsumerState<AddFoodScreen> createState() => _AddFoodScreenState();
@@ -19,8 +19,9 @@ class AddFoodScreen extends ConsumerStatefulWidget {
 
 class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
   Timer? _debounceTimer;
-  final TextEditingController _searchController = TextEditingController();
   bool _hasInitialized = false;
+
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -69,13 +70,70 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
     final mealTrackingViewModel = ref.read(
       mealTrackingViewModelProvider.notifier,
     );
+    Meal selectedMeal = widget.meal;
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
-          widget.meal.title,
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+        title: Consumer(
+          builder: (context, ref, child) => Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: DropdownMenu(
+              enableSearch: false,
+              initialSelection: selectedMeal,
+              inputDecorationTheme: InputDecorationTheme(
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.only(
+                  left: 17,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                ),
+              ),
+              textStyle: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              trailingIcon: Icon(
+                Icons.keyboard_arrow_down,
+                color: primaryColor,
+                size: 20,
+              ),
+              selectedTrailingIcon: Icon(
+                Icons.keyboard_arrow_up,
+                color: primaryColor,
+                size: 20,
+              ),
+              onSelected: (Meal? meal) {
+                if (meal == null) {
+                  return;
+                }
+                setState(() {
+                  selectedMeal = meal;
+                  ref.read(currentMealProvider.notifier).state = selectedMeal;
+                });
+              },
+              dropdownMenuEntries: <DropdownMenuEntry<Meal>>[
+                DropdownMenuEntry<Meal>(
+                  value: Meal.breakfast,
+                  label: Meal.breakfast.title,
+                ),
+                DropdownMenuEntry<Meal>(
+                  value: Meal.lunch,
+                  label: Meal.lunch.title,
+                ),
+                DropdownMenuEntry<Meal>(
+                  value: Meal.dinner,
+                  label: Meal.dinner.title,
+                ),
+                DropdownMenuEntry<Meal>(
+                  value: Meal.snack,
+                  label: Meal.snack.title,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: Padding(
@@ -128,10 +186,13 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                     return FoodListItem(
                       food: food,
                       onAdd: () {
+                        TimeOfDay now = TimeOfDay.now();
+
                         mealTrackingViewModel.addFoodToMeal(
                           food: food,
-                          meal: widget.meal,
+                          meal: selectedMeal,
                           servingAmount: 1,
+                          consumedAt: now,
                         );
                       },
                     );
