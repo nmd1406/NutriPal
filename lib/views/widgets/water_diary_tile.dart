@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:nutripal/models/water_record.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_water_screen.dart';
 
@@ -29,11 +30,12 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
 
   @override
   Widget build(BuildContext context) {
-    final waterTrackingState = ref.watch(waterTrackingViewModelProvider);
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
     final waterTrackingViewModel = ref.read(
       waterTrackingViewModelProvider.notifier,
     );
-    final records = waterTrackingState.waterRecords;
+    final recordsByDate = diaryTrackingState.recordsByDate;
+    final waterRecords = recordsByDate.waterRecords;
 
     return Container(
       width: double.infinity,
@@ -68,7 +70,7 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
                 ),
                 const Spacer(),
                 Text(
-                  "${waterTrackingState.totalAmount.toInt()}ml",
+                  "${recordsByDate.totalWaterAmount.toInt()}ml",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -76,14 +78,14 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
           ),
           const Divider(thickness: 1),
 
-          records.isEmpty
+          waterRecords.isEmpty
               ? const SizedBox.shrink()
               : ListView.builder(
-                  itemCount: records.length,
+                  itemCount: waterRecords.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
-                    final WaterRecord record = records[index];
+                    final WaterRecord record = waterRecords[index];
                     return Dismissible(
                       key: ObjectKey(record),
                       direction: DismissDirection.endToStart,
@@ -164,7 +166,7 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
                   },
                 ),
 
-          records.isEmpty
+          waterRecords.isEmpty
               ? const SizedBox.shrink()
               : const Divider(thickness: 1),
           Padding(

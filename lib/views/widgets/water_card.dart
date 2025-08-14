@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/profile.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
-import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_water_screen.dart';
 import 'package:nutripal/views/widgets/water_progress_indicator.dart';
 
@@ -12,7 +11,13 @@ class WaterCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
-    final profileState = ref.watch(profileProvider);
+    final recommendedDailyWater = ref.watch(recommendedDailyWaterProvider);
+
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
+    final double currentIntake =
+        diaryTrackingState.recordsByDate.totalWaterAmount;
+    final double goal = recommendedDailyWater;
+    final double progress = currentIntake / goal;
 
     return GestureDetector(
       onTap: () => Navigator.of(
@@ -51,23 +56,11 @@ class WaterCard extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Center(
-                child: profileState.when(
-                  data: (Profile profile) {
-                    final waterTrackingState = ref.watch(
-                      waterTrackingViewModelProvider,
-                    );
-                    final double currentIntake = waterTrackingState.totalAmount;
-                    final double goal = profile.recommendedDailyWater;
-                    final double progress = currentIntake / goal;
-                    return WaterProgressIndicator(
-                      currentIntake: currentIntake,
-                      goal: goal,
-                      radius: 75,
-                      progress: progress,
-                    );
-                  },
-                  error: (_, _) => const Text("Có lỗi"),
-                  loading: () => const CircularProgressIndicator(),
+                child: WaterProgressIndicator(
+                  currentIntake: currentIntake,
+                  goal: goal,
+                  radius: 75,
+                  progress: progress,
                 ),
               ),
             ],

@@ -1,8 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/profile.dart';
-import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 
 class CaloriesTab extends ConsumerStatefulWidget {
@@ -32,7 +31,7 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
     const double chartRadius = 90;
     const divider = Divider(thickness: 1);
 
-    final profileState = ref.watch(profileProvider);
+    final tdee = ref.watch(tdeeProvider);
 
     final theme = Theme.of(context);
     final breakfastColor = theme.primaryColor;
@@ -40,16 +39,17 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
     final dinnerColor = theme.colorScheme.onPrimaryContainer;
     final snackColor = theme.colorScheme.tertiary;
 
-    final mealTrackingState = ref.watch(mealTrackingViewModelProvider);
-    final totalCalories = mealTrackingState.totalDailyCalories;
-    final breakfastCalories = mealTrackingState.breakfastCalories;
-    final lunchCalories = mealTrackingState.lunchCalories;
-    final dinnerCalories = mealTrackingState.dinnerCalories;
-    final snackCalories = mealTrackingState.snackCalories;
-    final breakfastPercentage = mealTrackingState.breakfastPercentage;
-    final lunchPercentage = mealTrackingState.lunchPercentage;
-    final dinnerPercentage = mealTrackingState.dinnerPercentage;
-    final snackPercentage = mealTrackingState.snackPercentage;
+    final diaryRecordState = ref.watch(diaryRecordViewModelProvider);
+    final recordsByDate = diaryRecordState.recordsByDate;
+    final totalCalories = recordsByDate.totalDailyCalories;
+    final breakfastCalories = recordsByDate.breakfastCalories;
+    final lunchCalories = recordsByDate.lunchCalories;
+    final dinnerCalories = recordsByDate.dinnerCalories;
+    final snackCalories = recordsByDate.snackCalories;
+    final breakfastPercentage = recordsByDate.breakfastPercentage;
+    final lunchPercentage = recordsByDate.lunchPercentage;
+    final dinnerPercentage = recordsByDate.dinnerPercentage;
+    final snackPercentage = recordsByDate.snackPercentage;
 
     return Container(
       decoration: BoxDecoration(
@@ -179,16 +179,12 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Mục tiêu"),
-                profileState.when(
-                  data: (Profile profile) => Text(
-                    "${profile.tdee.round()}",
-                    style: TextStyle(
-                      color: theme.primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  "${tdee.round()}",
+                  style: TextStyle(
+                    color: theme.primaryColor,
+                    fontWeight: FontWeight.bold,
                   ),
-                  error: (_, _) => const Text("Có lỗi..."),
-                  loading: () => const CircularProgressIndicator(),
                 ),
               ],
             ),

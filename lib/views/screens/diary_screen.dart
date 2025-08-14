@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/meal_record.dart';
-import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
+import 'package:nutripal/models/food_record.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
-import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/widgets/date_selector.dart';
 import 'package:nutripal/views/widgets/meal_diary_tile.dart';
 import 'package:nutripal/views/widgets/water_diary_tile.dart';
@@ -16,30 +15,27 @@ class DiaryScreen extends ConsumerStatefulWidget {
 }
 
 class _DiaryScreenState extends ConsumerState<DiaryScreen> {
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _selectedDate = ref.watch(diaryRecordViewModelProvider).selectedDate;
+  }
 
   void _previousDay() {
     setState(() {
       _selectedDate = _selectedDate.subtract(const Duration(days: 1));
     });
-    ref
-        .read(mealTrackingViewModelProvider.notifier)
-        .changeSelectedDate(_selectedDate);
-    ref
-        .read(waterTrackingViewModelProvider.notifier)
-        .changeSelectedDate(_selectedDate);
+    ref.read(diaryRecordViewModelProvider.notifier).changeDate(_selectedDate);
   }
 
   void _nextDay() {
     setState(() {
       _selectedDate = _selectedDate.add(const Duration(days: 1));
     });
-    ref
-        .read(mealTrackingViewModelProvider.notifier)
-        .changeSelectedDate(_selectedDate);
-    ref
-        .read(waterTrackingViewModelProvider.notifier)
-        .changeSelectedDate(_selectedDate);
+    ref.read(diaryRecordViewModelProvider.notifier).changeDate(_selectedDate);
   }
 
   Future<void> _selectDate() async {
@@ -53,12 +49,7 @@ class _DiaryScreenState extends ConsumerState<DiaryScreen> {
       setState(() {
         _selectedDate = picked;
       });
-      ref
-          .read(mealTrackingViewModelProvider.notifier)
-          .changeSelectedDate(_selectedDate);
-      ref
-          .read(waterTrackingViewModelProvider.notifier)
-          .changeSelectedDate(_selectedDate);
+      ref.read(diaryRecordViewModelProvider.notifier).changeDate(_selectedDate);
     }
   }
 
@@ -66,8 +57,11 @@ class _DiaryScreenState extends ConsumerState<DiaryScreen> {
   Widget build(BuildContext context) {
     final tdee = ref.watch(tdeeProvider).round();
 
-    final mealTrackingState = ref.watch(mealTrackingViewModelProvider);
-    final int totalDailyCalories = mealTrackingState.totalDailyCalories.round();
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
+    final int totalDailyCalories = diaryTrackingState
+        .recordsByDate
+        .totalDailyCalories
+        .round();
 
     return Scaffold(
       appBar: AppBar(title: Text("Nhật ký")),

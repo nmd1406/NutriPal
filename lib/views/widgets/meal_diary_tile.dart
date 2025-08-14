@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/meal_record.dart';
+import 'package:nutripal/models/food_record.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_food_screen.dart';
 
@@ -11,13 +12,14 @@ class MealDiaryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mealTrackingState = ref.watch(mealTrackingViewModelProvider);
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
     final mealTrackingViewModel = ref.read(
       mealTrackingViewModelProvider.notifier,
     );
 
-    final mealRecords = mealTrackingState.getMealRecords(meal);
-    final totalCalories = mealTrackingState.getTotalCaloriesForMeal(meal);
+    final recordsByDate = diaryTrackingState.recordsByDate;
+    final mealRecords = recordsByDate.getMealRecords(meal);
+    final totalCalories = recordsByDate.getTotalCaloriesByMeal(meal);
 
     return Container(
       width: double.infinity,
@@ -66,7 +68,7 @@ class MealDiaryTile extends ConsumerWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: mealRecords.length,
                   itemBuilder: (context, index) {
-                    final MealRecord mealRecord = mealRecords[index];
+                    final FoodRecord mealRecord = mealRecords[index];
                     return Dismissible(
                       key: ObjectKey(mealRecord),
                       direction: DismissDirection.endToStart,

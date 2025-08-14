@@ -1,9 +1,10 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/food.dart';
 import 'package:intl/intl.dart';
-import 'package:nutripal/models/meal_record.dart';
+import 'package:nutripal/models/food.dart';
+import 'package:nutripal/models/food_record.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 
 class EditFoodEntryScreen extends ConsumerStatefulWidget {

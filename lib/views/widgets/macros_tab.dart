@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 
 class MacrosTab extends ConsumerStatefulWidget {
@@ -31,10 +31,11 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
     const double chartRadius = 90;
 
     final targetMacros = ref.watch(targetMacrosProvider);
-    final mealTrackingViewModel = ref.watch(mealTrackingViewModelProvider);
-    final carbsPercentage = mealTrackingViewModel.totalDailyCarbsPercentage;
-    final fatPercentage = mealTrackingViewModel.totalDailyFatPercentage;
-    final proteinPercentage = mealTrackingViewModel.totalDailyProteinPercentage;
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
+    final recordsByDate = diaryTrackingState.recordsByDate;
+    final carbsPercentage = recordsByDate.totalDailyCarbsPercentage;
+    final fatPercentage = recordsByDate.totalDailyFatPercentage;
+    final proteinPercentage = recordsByDate.totalDailyProteinPercentage;
 
     final carbsColor = const Color.fromARGB(255, 44, 127, 47);
     final fatColor = Colors.deepPurple;
@@ -61,11 +62,11 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
       ),
       child: Column(
         children: [
-          mealTrackingViewModel.isEmpty
+          recordsByDate.isMealRecordsEmpty
               ? const SizedBox(height: 10)
               : const SizedBox.shrink(),
           const SizedBox(height: 45),
-          mealTrackingViewModel.isEmpty
+          recordsByDate.isMealRecordsEmpty
               ? Container(
                   width: 200,
                   height: 200,
@@ -119,7 +120,7 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
                   children: [
                     _buildMacroLegend(
                       "Carbs",
-                      mealTrackingViewModel.totalDailyCarbs,
+                      recordsByDate.totalDailyCarbs,
                       carbsColor,
                     ),
                     Text(_formatPercentage(carbsPercentage)),
@@ -131,7 +132,7 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
                   children: [
                     _buildMacroLegend(
                       "Fat",
-                      mealTrackingViewModel.totalDailyFat,
+                      recordsByDate.totalDailyFat,
                       fatColor,
                     ),
                     Text(_formatPercentage(fatPercentage)),
@@ -143,7 +144,7 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
                   children: [
                     _buildMacroLegend(
                       "Protein",
-                      mealTrackingViewModel.totalDailyProtein,
+                      recordsByDate.totalDailyProtein,
                       proteinColor,
                     ),
                     Text(_formatPercentage(proteinPercentage)),

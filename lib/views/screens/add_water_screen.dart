@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/widgets/water_progress_indicator.dart';
@@ -27,9 +28,10 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
     final deviceSize = MediaQuery.of(context).size;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final waterTrackingState = ref.watch(waterTrackingViewModelProvider);
+    final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
     final recommendedDailyWater = ref.watch(recommendedDailyWaterProvider);
-    final double currentIntake = waterTrackingState.totalAmount;
+    final double currentIntake =
+        diaryTrackingState.recordsByDate.totalWaterAmount;
     final double goal = recommendedDailyWater;
     final double progress = currentIntake / goal;
 

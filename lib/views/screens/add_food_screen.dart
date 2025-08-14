@@ -3,7 +3,7 @@ import 'dart:async' show Timer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/models/food.dart';
-import 'package:nutripal/models/meal_record.dart';
+import 'package:nutripal/models/food_record.dart';
 import 'package:nutripal/viewmodels/food_viewmodel.dart';
 import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
 import 'package:nutripal/views/widgets/food_list_item.dart';

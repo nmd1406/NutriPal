@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/viewmodels/meal_tracking_viewmodel.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/navigation_viewmodel.dart';
-import 'package:nutripal/viewmodels/water_tracking_viewmodel.dart';
 import 'package:nutripal/views/screens/add_food_screen.dart';
 import 'package:nutripal/views/screens/add_water_screen.dart';
 import 'package:nutripal/views/screens/dashboard_screen.dart';
@@ -16,6 +15,7 @@ class MainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(navigationViewModelProvider);
+    final diaryNotifier = ref.read(diaryRecordViewModelProvider.notifier);
 
     final screens = const [
       DashboardScreen(),
@@ -62,9 +62,7 @@ class MainScreen extends ConsumerWidget {
                   children: [
                     ListTile(
                       onTap: () {
-                        ref
-                            .read(mealTrackingViewModelProvider.notifier)
-                            .changeSelectedDate(DateTime.now());
+                        diaryNotifier.changeDate(DateTime.now());
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const AddFoodScreen(),
@@ -79,9 +77,7 @@ class MainScreen extends ConsumerWidget {
                     ),
                     ListTile(
                       onTap: () {
-                        ref
-                            .read(waterTrackingViewModelProvider.notifier)
-                            .changeSelectedDate(DateTime.now());
+                        diaryNotifier.changeDate(DateTime.now());
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const AddWaterScreen(),
