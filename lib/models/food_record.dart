@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:nutripal/models/food.dart';
 
-class MealRecord {
+class FoodRecord {
   final Food food;
   final double servingAmount;
   final Meal meal;
   final TimeOfDay consumedAt;
 
-  const MealRecord({
+  const FoodRecord({
     required this.food,
     required this.servingAmount,
     required this.meal,
     required this.consumedAt,
   });
 
-  MealRecord copyWith({
+  FoodRecord copyWith({
     Food? food,
     double? servingAmount,
     Meal? meal,
     TimeOfDay? consumedAt,
   }) {
-    return MealRecord(
+    return FoodRecord(
       food: food ?? this.food,
       servingAmount: servingAmount ?? this.servingAmount,
       meal: meal ?? this.meal,
@@ -28,8 +28,8 @@ class MealRecord {
     );
   }
 
-  static MealRecord placeholder() {
-    return MealRecord(
+  static FoodRecord placeholder() {
+    return FoodRecord(
       food: Food.empty(),
       servingAmount: 0,
       meal: Meal.breakfast,
