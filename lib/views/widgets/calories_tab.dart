@@ -86,6 +86,8 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
                     width: 200,
                     height: 200,
                     child: PieChart(
+                      duration: Duration.zero,
+                      curve: Curves.linear,
                       PieChartData(
                         sections: [
                           _sectionData(
@@ -110,6 +112,7 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
                           ),
                         ],
                         centerSpaceRadius: 0,
+                        startDegreeOffset: 0,
                         sectionsSpace: 4,
                         borderData: FlBorderData(show: false),
                       ),

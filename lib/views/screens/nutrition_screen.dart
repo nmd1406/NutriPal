@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
+import 'package:nutripal/views/widgets/calories_tab.dart';
 import 'package:nutripal/views/widgets/date_selector.dart';
 import 'package:nutripal/views/widgets/macros_tab.dart';
-import 'package:nutripal/views/widgets/calories_tab.dart';
 
-class NutritionScreen extends StatefulWidget {
+class NutritionScreen extends ConsumerStatefulWidget {
   const NutritionScreen({super.key});
 
   @override
-  State<NutritionScreen> createState() => _NutritionScreenState();
+  ConsumerState<NutritionScreen> createState() => _NutritionScreenState();
 }
 
-class _NutritionScreenState extends State<NutritionScreen>
+class _NutritionScreenState extends ConsumerState<NutritionScreen>
     with TickerProviderStateMixin {
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
 
   late TabController _tabController;
 
@@ -28,16 +30,25 @@ class _NutritionScreenState extends State<NutritionScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _selectedDate = ref.read(diaryRecordViewModelProvider).selectedDate;
+  }
+
   void _previousDay() {
     setState(() {
       _selectedDate = _selectedDate.subtract(const Duration(days: 1));
     });
+    ref.watch(diaryRecordViewModelProvider.notifier).changeDate(_selectedDate);
   }
 
   void _nextDay() {
     setState(() {
       _selectedDate = _selectedDate.add(const Duration(days: 1));
     });
+    ref.watch(diaryRecordViewModelProvider.notifier).changeDate(_selectedDate);
   }
 
   Future<void> _selectDate() async {
@@ -51,6 +62,9 @@ class _NutritionScreenState extends State<NutritionScreen>
       setState(() {
         _selectedDate = pickedDate;
       });
+      ref
+          .watch(diaryRecordViewModelProvider.notifier)
+          .changeDate(_selectedDate);
     }
   }
 

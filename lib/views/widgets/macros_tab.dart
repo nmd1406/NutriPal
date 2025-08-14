@@ -33,9 +33,15 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
     final targetMacros = ref.watch(targetMacrosProvider);
     final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
     final recordsByDate = diaryTrackingState.recordsByDate;
-    final carbsPercentage = recordsByDate.totalDailyCarbsPercentage;
-    final fatPercentage = recordsByDate.totalDailyFatPercentage;
-    final proteinPercentage = recordsByDate.totalDailyProteinPercentage;
+    final carbsPercentage = recordsByDate.totalDailyCarbsPercentage.isNaN
+        ? 0.0
+        : recordsByDate.totalDailyCarbsPercentage;
+    final fatPercentage = recordsByDate.totalDailyFatPercentage.isNaN
+        ? 0.0
+        : recordsByDate.totalDailyFatPercentage;
+    final proteinPercentage = recordsByDate.totalDailyProteinPercentage.isNaN
+        ? 0.0
+        : recordsByDate.totalDailyProteinPercentage;
 
     final carbsColor = const Color.fromARGB(255, 44, 127, 47);
     final fatColor = Colors.deepPurple;
@@ -81,7 +87,11 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
                     height: 200,
                     width: 200,
                     child: PieChart(
+                      duration: Duration.zero,
+                      curve: Curves.linear,
                       PieChartData(
+                        startDegreeOffset: 0,
+                        centerSpaceRadius: 0,
                         sections: [
                           _sectionData(
                             carbsPercentage,
