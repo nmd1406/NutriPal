@@ -12,4 +12,15 @@ class WaterRecord {
       consumedAt: consumedAt ?? this.consumedAt,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "amount": amount,
+      "consumedAt": {"hour": consumedAt.hour, "minute": consumedAt.minute},
+    };
+  }
+  
+  factory WaterRecord.fromJson(Map<String, dynamic> json) {
+    return WaterRecord(amount: (json["amount"] as num).toDouble(), consumedAt: TimeOfDay(hour: json["consumedAt"]["hour"], minute: json["consumedAt"]["minute"]));
+  }
 }

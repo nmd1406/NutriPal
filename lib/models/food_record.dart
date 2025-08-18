@@ -45,6 +45,27 @@ class FoodRecord {
   double get totalCarbs => food.carb * servingAmount;
   double get totalFat => food.fat * servingAmount;
   double get totalProtein => food.protein * servingAmount;
+
+  Map<String, dynamic> toJson() {
+    return {
+      "food": food.toJson(),
+      "servingAmount": servingAmount,
+      "meal": meal.name,
+      "consumedAt": {"hour": consumedAt.hour, "minute": consumedAt.minute},
+    };
+  }
+
+  factory FoodRecord.fromJson(Map<String, dynamic> json) {
+    return FoodRecord(
+      food: Food.fromJson(json["food"] as Map<String, dynamic>),
+      servingAmount: (json["servingAmount"] as num).toDouble(),
+      meal: Meal.fromTitle(json["meal"] as String) ?? Meal.breakfast,
+      consumedAt: TimeOfDay(
+        hour: json["consumedAt"]["hour"] as int,
+        minute: json["consumedAt"]["minute"] as int,
+      ),
+    );
+  }
 }
 
 enum Meal {

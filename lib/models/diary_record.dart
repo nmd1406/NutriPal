@@ -101,4 +101,38 @@ class DiaryRecord {
   bool get isMealRecordsEmpty => foodRecordsByMeal.isEmpty;
   bool get isWaterRecordsEmpty => waterRecords.isEmpty;
   bool get isEmpty => isMealRecordsEmpty || isWaterRecordsEmpty;
+
+  Map<String, dynamic> toJson() {
+    return {
+      "date": date.toIso8601String(),
+      "foodRecordsByMeal": foodRecordsByMeal.map(
+        (meal, records) => MapEntry(
+          meal.name,
+          records.map((record) => record.toJson()).toList(),
+        ),
+      ),
+      "waterRecords": waterRecords.map((record) => record.toJson()).toList(),
+    };
+  }
+
+  factory DiaryRecord.fromJson(Map<String, dynamic> json) {
+    return DiaryRecord(
+      date: DateTime.parse(json["date"] as String),
+      foodRecordsByMeal: (json["foodRecordsByMeal"] as Map<String, dynamic>)
+          .map(
+            (mealName, records) => MapEntry(
+              Meal.fromTitle(mealName) ?? Meal.breakfast,
+              (records as List)
+                  .map(
+                    (record) =>
+                        FoodRecord.fromJson(record as Map<String, dynamic>),
+                  )
+                  .toList(),
+            ),
+          ),
+      waterRecords: (json["waterRecords"] as List)
+          .map((record) => WaterRecord.fromJson(record as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 }

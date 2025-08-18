@@ -88,6 +88,14 @@ class Food {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return toMap();
+  }
+
+  factory Food.fromJson(Map<String, dynamic> json) {
+    return Food.fromMap(json);
+  }
+
   static Food empty() {
     return Food(
       name: "",
