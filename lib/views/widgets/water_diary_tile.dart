@@ -146,7 +146,7 @@ class _WaterDiaryTileState extends ConsumerState<WaterDiaryTile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "${record.amount}ml",
+                              "${record.amount.round()}ml",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

@@ -20,6 +20,7 @@ class AddFoodScreen extends ConsumerStatefulWidget {
 class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
   Timer? _debounceTimer;
   bool _hasInitialized = false;
+  late Meal _selectedMeal;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -30,6 +31,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
     _searchController.addListener(() {
       setState(() {});
     });
+    _selectedMeal = widget.meal;
   }
 
   @override
@@ -70,7 +72,6 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
     final mealTrackingViewModel = ref.read(
       mealTrackingViewModelProvider.notifier,
     );
-    Meal selectedMeal = widget.meal;
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +81,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
             padding: const EdgeInsets.only(left: 16),
             child: DropdownMenu(
               enableSearch: false,
-              initialSelection: selectedMeal,
+              initialSelection: _selectedMeal,
               inputDecorationTheme: InputDecorationTheme(
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.only(
@@ -110,8 +111,8 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                   return;
                 }
                 setState(() {
-                  selectedMeal = meal;
-                  ref.read(currentMealProvider.notifier).state = selectedMeal;
+                  _selectedMeal = meal;
+                  ref.read(currentMealProvider.notifier).state = _selectedMeal;
                 });
               },
               dropdownMenuEntries: <DropdownMenuEntry<Meal>>[
@@ -190,7 +191,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
 
                         mealTrackingViewModel.addFoodToMeal(
                           food: food,
-                          meal: selectedMeal,
+                          meal: _selectedMeal,
                           servingAmount: 1,
                           consumedAt: now,
                         );

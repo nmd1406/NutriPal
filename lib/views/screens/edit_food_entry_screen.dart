@@ -108,16 +108,21 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Bữa", style: TextStyle(fontSize: 18)),
+                    Text("Bữa", style: TextStyle(fontSize: 16)),
                     SizedBox(
-                      width: deviceSize.width * 0.3,
+                      width: deviceSize.width * 0.35,
                       child: DropdownButtonFormField<Meal>(
                         value: currentMeal,
                         padding: const EdgeInsets.only(left: 8),
                         style: TextStyle(
                           color: primaryColor,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w500,
+                        ),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                         items: [
                           DropdownMenuItem<Meal>(
@@ -154,7 +159,7 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Khẩu phần", style: TextStyle(fontSize: 18)),
+                    Text("Khẩu phần", style: TextStyle(fontSize: 16)),
                     SizedBox(
                       width: deviceSize.width * 0.12,
                       child: Form(
@@ -164,7 +169,7 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             color: primaryColor,
                             fontWeight: FontWeight.w500,
                           ),
@@ -178,12 +183,15 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                             }
                             return null;
                           },
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 8,
                             ),
                             isDense: true,
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                           onChanged: (value) {
                             setState(() {});
@@ -200,7 +208,7 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Thời gian", style: TextStyle(fontSize: 18)),
+                    Text("Thời gian", style: TextStyle(fontSize: 16)),
                     TextButton(
                       onPressed: () async {
                         final selectedTime = await _selectTime();
@@ -212,7 +220,7 @@ class _EditFoodEntryScreenState extends ConsumerState<EditFoodEntryScreen> {
                       },
                       child: Text(
                         _formatTime(_selectedTime),
-                        style: TextStyle(color: primaryColor, fontSize: 18),
+                        style: TextStyle(color: primaryColor, fontSize: 16),
                       ),
                     ),
                   ],

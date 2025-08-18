@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/auth_viewmodel.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/views/widgets/calories_card.dart';
 import 'package:nutripal/views/widgets/macros_card.dart';
 import 'package:nutripal/views/widgets/water_card.dart';
@@ -11,6 +12,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authViewModelProvider);
+    ref.read(diaryRecordViewModelProvider.notifier).changeDate(DateTime.now());
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,

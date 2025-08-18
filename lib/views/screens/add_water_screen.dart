@@ -78,7 +78,7 @@ class _AddWaterScreenState extends ConsumerState<AddWaterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _totalAmount.toString(),
+                          "${_totalAmount.round()}",
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w500,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/models/profile.dart';
-import 'package:nutripal/viewmodels/macro_tracking_viewmodel.dart';
+import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -45,28 +45,29 @@ class MacrosCard extends ConsumerWidget {
             const SizedBox(height: 10),
             profileState.when(
               data: (Profile profile) {
-                final macroTrackingState = ref.watch(
-                  macroTrackingViewModelProvider,
+                final diaryRecordState = ref.watch(
+                  diaryRecordViewModelProvider,
                 );
+                final recordsByDate = diaryRecordState.recordsByDate;
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildMacroIndicator(
                       label: "Carb",
                       goalValue: profile.targetCarb,
-                      intakeValue: macroTrackingState.carbIntake,
+                      intakeValue: recordsByDate.totalDailyCarbs,
                       color: const Color.fromARGB(255, 44, 127, 47),
                     ),
                     _buildMacroIndicator(
                       label: "Fat",
                       goalValue: profile.targetFat,
-                      intakeValue: macroTrackingState.fatIntake,
+                      intakeValue: recordsByDate.totalDailyFat,
                       color: Colors.deepPurple,
                     ),
                     _buildMacroIndicator(
                       label: "Protein",
                       goalValue: profile.targetProtein,
-                      intakeValue: macroTrackingState.proteinIntake,
+                      intakeValue: recordsByDate.totalDailyProtein,
                       color: Colors.amber,
                     ),
                   ],
