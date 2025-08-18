@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/services/auth_service.dart';
 import 'package:nutripal/views/screens/welcome_screen.dart';
@@ -199,6 +198,16 @@ final recommendedDailyWaterProvider = Provider<double>((ref) {
 
   return profileState.when(
     data: (Profile profile) => profile.recommendedDailyWater,
+    error: (_, _) => 0,
+    loading: () => 0,
+  );
+});
+
+final currentWeightProvider = Provider<double>((ref) {
+  final profileState = ref.watch(profileProvider);
+
+  return profileState.when(
+    data: (Profile profile) => profile.weight,
     error: (_, _) => 0,
     loading: () => 0,
   );
