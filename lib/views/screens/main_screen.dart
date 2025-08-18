@@ -4,6 +4,7 @@ import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/navigation_viewmodel.dart';
 import 'package:nutripal/views/screens/add_food_screen.dart';
 import 'package:nutripal/views/screens/add_water_screen.dart';
+import 'package:nutripal/views/screens/weight_record_screen.dart';
 import 'package:nutripal/views/screens/dashboard_screen.dart';
 import 'package:nutripal/views/screens/diary_screen.dart';
 import 'package:nutripal/views/screens/more_screen.dart';
@@ -50,45 +51,66 @@ class MainScreen extends ConsumerWidget {
           showModalBottomSheet(
             context: context,
             builder: (context) => Container(
-              height: 120,
+              height: MediaQuery.of(context).size.height * 0.25,
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
               ),
-              child: Center(
-                child: Column(
-                  children: [
-                    ListTile(
-                      onTap: () {
-                        diaryNotifier.changeDate(DateTime.now());
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AddFoodScreen(),
-                          ),
-                        );
-                      },
-                      leading: const Icon(
-                        Icons.restaurant,
-                        color: Colors.orange,
-                      ),
-                      title: Text("Thực phẩm"),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ListTile(
+                    onTap: () {
+                      diaryNotifier.changeDate(DateTime.now());
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AddFoodScreen(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.restaurant, color: Colors.orange),
+                    title: Text(
+                      "Thực phẩm",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    ListTile(
-                      onTap: () {
-                        diaryNotifier.changeDate(DateTime.now());
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AddWaterScreen(),
-                          ),
-                        );
-                      },
-                      leading: const Icon(Icons.water_drop, color: Colors.blue),
-                      title: Text("Nước"),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    onTap: () {
+                      diaryNotifier.changeDate(DateTime.now());
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AddWaterScreen(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(Icons.water_drop, color: Colors.blue),
+                    title: Text(
+                      "Nước",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ],
-                ),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AddWeightRecordScreen(),
+                        ),
+                      );
+                    },
+                    leading: const Icon(
+                      Icons.monitor_weight,
+                      color: Colors.green,
+                    ),
+                    title: Text(
+                      "Cân nặng",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
