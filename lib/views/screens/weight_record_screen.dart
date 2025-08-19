@@ -3,35 +3,63 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nutripal/models/weight_record.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
+import 'package:nutripal/viewmodels/weight_record_viewmodel.dart';
 
-class AddWeightRecordScreen extends ConsumerStatefulWidget {
-  const AddWeightRecordScreen({super.key});
+class WeightRecordScreen extends ConsumerStatefulWidget {
+  final int? recordIndex;
+
+  const WeightRecordScreen({super.key, this.recordIndex});
 
   @override
-  ConsumerState<AddWeightRecordScreen> createState() =>
-      _AddWeightRecordScreenState();
+  ConsumerState<WeightRecordScreen> createState() => _WeightRecordScreenState();
 }
 
-class _AddWeightRecordScreenState extends ConsumerState<AddWeightRecordScreen> {
+class _WeightRecordScreenState extends ConsumerState<WeightRecordScreen> {
   late TextEditingController _weightController;
   final _formKey = GlobalKey<FormState>();
   DateTime _selectedDate = DateTime.now();
   File? _selectedImage;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    double currentWeight = ref.read(currentWeightProvider);
-    _weightController = TextEditingController(
-      text: _formatDouble(currentWeight),
-    );
+  void initState() {
+    super.initState();
+    _initializeData();
   }
 
   @override
   void dispose() {
     _weightController.dispose();
     super.dispose();
+  }
+
+  bool get _isEditMode => widget.recordIndex != null;
+
+  WeightRecord? get _existingRecord {
+    if (!_isEditMode) {
+      return null;
+    }
+
+    return ref
+        .read(weightRecordViewModelProvider.notifier)
+        .getRecord(widget.recordIndex!);
+  }
+
+  void _initializeData() {
+    if (_isEditMode && _existingRecord != null) {
+      final WeightRecord record = _existingRecord!;
+      _weightController = TextEditingController(
+        text: _formatDouble(record.weight),
+      );
+      _selectedDate = record.date;
+      _selectedImage = record.image;
+    } else {
+      final currentWeight = ref.read(currentWeightProvider);
+      _weightController = TextEditingController(
+        text: _formatDouble(currentWeight),
+      );
+    }
   }
 
   String _formatDouble(double value) {
@@ -109,10 +137,46 @@ class _AddWeightRecordScreenState extends ConsumerState<AddWeightRecordScreen> {
     );
   }
 
+  void _saveRecord() {
+    FocusScope.of(context).unfocus();
+
+    if (_formKey.currentState!.validate()) {
+      double weight = double.parse(_weightController.text);
+
+      if (_isEditMode) {
+        ref
+            .read(weightRecordViewModelProvider.notifier)
+            .updateRecord(
+              widget.recordIndex!,
+              weight,
+              _selectedDate,
+              _selectedImage,
+            );
+      } else {
+        ref
+            .read(weightRecordViewModelProvider.notifier)
+            .addRecord(weight, _selectedDate, _selectedImage);
+      }
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đã lưu"), duration: Duration(seconds: 1)),
+      );
+
+      if (!_isEditMode) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
-    final currentWeight = ref.watch(currentWeightProvider);
+
+    final weightRecordViewModel = ref.read(
+      weightRecordViewModelProvider.notifier,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +187,7 @@ class _AddWeightRecordScreenState extends ConsumerState<AddWeightRecordScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: _saveRecord,
             icon: Icon(Icons.check, color: primaryColor, size: 32),
           ),
         ],
@@ -144,6 +208,7 @@ class _AddWeightRecordScreenState extends ConsumerState<AddWeightRecordScreen> {
                       key: _formKey,
                       child: TextFormField(
                         controller: _weightController,
+                        validator: weightRecordViewModel.validateWeight,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.end,
                         decoration: const InputDecoration(
@@ -192,11 +257,18 @@ class _AddWeightRecordScreenState extends ConsumerState<AddWeightRecordScreen> {
                     onTap: _pickImage,
                     child: _selectedImage == null
                         ? Icon(Icons.camera_alt_outlined)
-                        : Image.file(
-                            _selectedImage!,
-                            width: 100,
-                            height: 100,
-                            alignment: Alignment.centerRight,
+                        : Container(
+                            height: 70,
+                            width: 70,
+                            clipBehavior: Clip.hardEdge,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.grey[200],
+                            ),
+                            child: Image.file(
+                              _selectedImage!,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                   ),
                 ],
