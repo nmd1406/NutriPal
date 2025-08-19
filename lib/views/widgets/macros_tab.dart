@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MacrosTab extends ConsumerStatefulWidget {
   const MacrosTab({super.key});
@@ -28,9 +29,10 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
   Widget build(BuildContext context) {
     super.build(context);
 
-    const double chartRadius = 90;
+    const double chartRadius = 100;
 
     final targetMacros = ref.watch(targetMacrosProvider);
+
     final diaryTrackingState = ref.watch(diaryRecordViewModelProvider);
     final recordsByDate = diaryTrackingState.recordsByDate;
     final carbsPercentage = recordsByDate.totalDailyCarbsPercentage.isNaN
@@ -52,43 +54,43 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
       fontWeight: FontWeight.bold,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
+    return Skeletonizer(
+      enabled: diaryTrackingState.isLoading,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.4),
+            width: 1,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          recordsByDate.isMealRecordsEmpty
-              ? const SizedBox(height: 10)
-              : const SizedBox.shrink(),
-          const SizedBox(height: 45),
-          recordsByDate.isMealRecordsEmpty
-              ? Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                )
-              : FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox(
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 45),
+            recordsByDate.isMealRecordsEmpty
+                ? Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                : SizedBox(
                     height: 200,
                     width: 200,
                     child: PieChart(
-                      duration: Duration.zero,
-                      curve: Curves.linear,
+                      duration: const Duration(milliseconds: 336),
+                      curve: Curves.decelerate,
                       PieChartData(
                         startDegreeOffset: 0,
                         centerSpaceRadius: 0,
@@ -108,66 +110,76 @@ class _MacrosTabState extends ConsumerState<MacrosTab>
                       ),
                     ),
                   ),
-                ),
-          const SizedBox(height: 62),
+            const SizedBox(height: 62),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Table(
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              columnWidths: <int, TableColumnWidth>{
-                0: FlexColumnWidth(6),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2),
-              },
-              children: <TableRow>[
-                const TableRow(
-                  children: [SizedBox.shrink(), Text("Tổng"), Text("Mục tiêu")],
-                ),
-                _spacingRow(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Table(
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                columnWidths: <int, TableColumnWidth>{
+                  0: FlexColumnWidth(6),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
+                children: <TableRow>[
+                  const TableRow(
+                    children: [
+                      SizedBox.shrink(),
+                      Text("Tổng"),
+                      Text("Mục tiêu"),
+                    ],
+                  ),
+                  _spacingRow(),
 
-                TableRow(
-                  children: [
-                    _buildMacroLegend(
-                      "Carbs",
-                      recordsByDate.totalDailyCarbs,
-                      carbsColor,
-                    ),
-                    Text(_formatPercentage(carbsPercentage)),
-                    Text("${targetMacros["carb"]!.round()}%", style: textStyle),
-                  ],
-                ),
-                _spacingRow(),
-                TableRow(
-                  children: [
-                    _buildMacroLegend(
-                      "Fat",
-                      recordsByDate.totalDailyFat,
-                      fatColor,
-                    ),
-                    Text(_formatPercentage(fatPercentage)),
-                    Text("${targetMacros["fat"]!.round()}%", style: textStyle),
-                  ],
-                ),
-                _spacingRow(),
-                TableRow(
-                  children: [
-                    _buildMacroLegend(
-                      "Protein",
-                      recordsByDate.totalDailyProtein,
-                      proteinColor,
-                    ),
-                    Text(_formatPercentage(proteinPercentage)),
-                    Text(
-                      "${targetMacros["protein"]!.round()}%",
-                      style: textStyle,
-                    ),
-                  ],
-                ),
-              ],
+                  TableRow(
+                    children: [
+                      _buildMacroLegend(
+                        "Carbs",
+                        recordsByDate.totalDailyCarbs,
+                        carbsColor,
+                      ),
+                      Text(_formatPercentage(carbsPercentage)),
+                      Text(
+                        "${targetMacros["carbs"]!.round()}%",
+                        style: textStyle,
+                      ),
+                    ],
+                  ),
+                  _spacingRow(),
+                  TableRow(
+                    children: [
+                      _buildMacroLegend(
+                        "Fat",
+                        recordsByDate.totalDailyFat,
+                        fatColor,
+                      ),
+                      Text(_formatPercentage(fatPercentage)),
+                      Text(
+                        "${targetMacros["fat"]!.round()}%",
+                        style: textStyle,
+                      ),
+                    ],
+                  ),
+                  _spacingRow(),
+                  TableRow(
+                    children: [
+                      _buildMacroLegend(
+                        "Protein",
+                        recordsByDate.totalDailyProtein,
+                        proteinColor,
+                      ),
+                      Text(_formatPercentage(proteinPercentage)),
+                      Text(
+                        "${targetMacros["protein"]!.round()}%",
+                        style: textStyle,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -369,12 +369,12 @@ class Profile {
     return (tdee * fatPercentage) / 9;
   }
 
-  double get _carbCalories => 4;
+  double get _carbsCalories => 4;
   double get _proteinCalories => 4;
   double get _fatCalories => 9;
 
   // Phần còn lại sau protein và fat
-  double get targetCarb {
+  double get targetCarbs {
     if (!isValid) {
       return 0;
     }
@@ -383,19 +383,19 @@ class Profile {
     double fatCalories = _fatCalories * targetFat;
     double remainingCalories = tdee - proteinCalories - fatCalories;
 
-    return remainingCalories / _carbCalories;
+    return remainingCalories / _carbsCalories;
   }
 
   Map<String, double> get macroPercentagesTarget {
     if (!isValid) {
-      return {"protein": 0, "carb": 0, "fat": 0};
+      return {"protein": 0, "carbs": 0, "fat": 0};
     }
 
     double targetCalories = tdee;
 
     return {
       "protein": (targetProtein * _proteinCalories) / targetCalories * 100,
-      "carb": (targetCarb * _carbCalories) / targetCalories * 100,
+      "carbs": (targetCarbs * _carbsCalories) / targetCalories * 100,
       "fat": (targetFat * _fatCalories) / targetCalories * 100,
     };
   }

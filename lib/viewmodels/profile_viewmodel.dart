@@ -188,8 +188,8 @@ final targetMacrosProvider = Provider<Map<String, double>>((ref) {
 
   return profileState.when(
     data: (Profile profile) => profile.macroPercentagesTarget,
-    error: (_, _) => {"carb": 0, "fat": 0, "protein": 0},
-    loading: () => {"carb": 0, "fat": 0, "protein": 0},
+    error: (_, _) => {"carbs": 0, "fat": 0, "protein": 0},
+    loading: () => {"carbs": 0, "fat": 0, "protein": 0},
   );
 });
 

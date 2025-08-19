@@ -5,6 +5,7 @@ import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/views/widgets/calories_card.dart';
 import 'package:nutripal/views/widgets/macros_card.dart';
 import 'package:nutripal/views/widgets/water_card.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -12,6 +13,8 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authViewModelProvider);
+
+    final diaryRecordState = ref.watch(diaryRecordViewModelProvider);
     ref.read(diaryRecordViewModelProvider.notifier).changeDate(DateTime.now());
     return Scaffold(
       appBar: AppBar(
@@ -28,8 +31,9 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ),
         ],
-        title: authState.when(
-          data: (user) => Padding(
+        title: Skeletonizer(
+          enabled: authState.isLoading,
+          child: Padding(
             padding: const EdgeInsets.only(top: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +47,11 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  user?.username ?? "User",
+                  authState.when(
+                    data: (user) => user?.username ?? "User",
+                    error: (_, _) => "Lỗi",
+                    loading: () => "Đang tải...",
+                  ),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.secondary,
                     fontWeight: FontWeight.w700,
@@ -53,22 +61,24 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
           ),
-          error: (_, _) => const Text("Lỗi"),
-          loading: () => const Text("Đang tải..."),
         ),
       ),
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 15),
-          child: Column(
-            children: [
-              const SizedBox(height: 28),
-              const CaloriesCard(),
-              const SizedBox(height: 20),
-              const MacrosCard(),
-              const SizedBox(height: 20),
-              const WaterCard(),
-            ],
+          child: Skeletonizer(
+            enabled: diaryRecordState.isLoading,
+            child: Column(
+              children: [
+                const SizedBox(height: 28),
+                const CaloriesCard(),
+                const SizedBox(height: 20),
+                const MacrosCard(),
+                const SizedBox(height: 20),
+                const WaterCard(),
+              ],
+            ),
           ),
         ),
       ),

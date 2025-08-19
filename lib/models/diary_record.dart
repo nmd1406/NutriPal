@@ -70,6 +70,18 @@ class DiaryRecord {
   double get dinnerPercentage => dinnerCalories / totalDailyCalories;
   double get snackPercentage => snackCalories / totalDailyCalories;
 
+  Map<String, double> get summary => {
+    "totalDailyCalories": totalDailyCalories,
+    "breakfastCalories": breakfastCalories,
+    "lunchCalories": lunchCalories,
+    "dinnerCalories": dinnerCalories,
+    "snackCalories": snackCalories,
+    "breakfastPercentage": breakfastPercentage,
+    "lunchPercentage": lunchPercentage,
+    "dinnerPercentage": dinnerPercentage,
+    "snackPercentage": snackPercentage,
+  };
+
   Map<String, double> get _dailyMacros {
     double totalCarbs = 0;
     double totalFat = 0;

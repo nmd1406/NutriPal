@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -12,7 +11,9 @@ class MacrosCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
 
-    final profileState = ref.watch(profileProvider);
+    final targetMacros = ref.watch(targetMacrosProvider);
+    final diaryRecordState = ref.watch(diaryRecordViewModelProvider);
+    final recordsByDate = diaryRecordState.recordsByDate;
 
     return Container(
       width: double.infinity,
@@ -43,38 +44,29 @@ class MacrosCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 10),
-            profileState.when(
-              data: (Profile profile) {
-                final diaryRecordState = ref.watch(
-                  diaryRecordViewModelProvider,
-                );
-                final recordsByDate = diaryRecordState.recordsByDate;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildMacroIndicator(
-                      label: "Carb",
-                      goalValue: profile.targetCarb,
-                      intakeValue: recordsByDate.totalDailyCarbs,
-                      color: const Color.fromARGB(255, 44, 127, 47),
-                    ),
-                    _buildMacroIndicator(
-                      label: "Fat",
-                      goalValue: profile.targetFat,
-                      intakeValue: recordsByDate.totalDailyFat,
-                      color: Colors.deepPurple,
-                    ),
-                    _buildMacroIndicator(
-                      label: "Protein",
-                      goalValue: profile.targetProtein,
-                      intakeValue: recordsByDate.totalDailyProtein,
-                      color: Colors.amber,
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Center(child: Text("Có lỗi xảy ra")),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildMacroIndicator(
+                  label: "Carbs",
+                  goalValue: targetMacros["carbs"] ?? 0.0,
+                  intakeValue: recordsByDate.totalDailyCarbs,
+                  color: const Color.fromARGB(255, 44, 127, 47),
+                ),
+                _buildMacroIndicator(
+                  label: "Fat",
+                  goalValue: targetMacros["fat"] ?? 0.0,
+                  intakeValue: recordsByDate.totalDailyFat,
+                  color: Colors.deepPurple,
+                ),
+                _buildMacroIndicator(
+                  label: "Protein",
+                  goalValue: targetMacros["protein"] ?? 0.0,
+                  intakeValue: recordsByDate.totalDailyProtein,
+                  color: Colors.amber,
+                ),
+              ],
             ),
           ],
         ),

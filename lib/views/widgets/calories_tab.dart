@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class CaloriesTab extends ConsumerStatefulWidget {
   const CaloriesTab({super.key});
@@ -28,7 +29,7 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
   Widget build(BuildContext context) {
     super.build(context);
 
-    const double chartRadius = 90;
+    const double chartRadius = 100;
     const divider = Divider(thickness: 1);
 
     final tdee = ref.watch(tdeeProvider);
@@ -41,159 +42,154 @@ class _CaloriesTabState extends ConsumerState<CaloriesTab>
 
     final diaryRecordState = ref.watch(diaryRecordViewModelProvider);
     final recordsByDate = diaryRecordState.recordsByDate;
-    final totalCalories = recordsByDate.totalDailyCalories;
-    final breakfastCalories = recordsByDate.breakfastCalories;
-    final lunchCalories = recordsByDate.lunchCalories;
-    final dinnerCalories = recordsByDate.dinnerCalories;
-    final snackCalories = recordsByDate.snackCalories;
-    final breakfastPercentage = recordsByDate.breakfastPercentage;
-    final lunchPercentage = recordsByDate.lunchPercentage;
-    final dinnerPercentage = recordsByDate.dinnerPercentage;
-    final snackPercentage = recordsByDate.snackPercentage;
+    final summary = recordsByDate.summary;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
+    return Skeletonizer(
+      enabled: diaryRecordState.isLoading,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.4),
+            width: 1,
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          totalCalories <= 0
-              ? const SizedBox(height: 10)
-              : const SizedBox.shrink(),
-          totalCalories <= 0
-              ? Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                )
-              : FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            summary["totalDailyCalories"]! <= 0
+                ? Container(
                     width: 200,
                     height: 200,
-                    child: PieChart(
-                      duration: Duration.zero,
-                      curve: Curves.linear,
-                      PieChartData(
-                        sections: [
-                          _sectionData(
-                            breakfastPercentage,
-                            chartRadius,
-                            breakfastColor,
-                          ),
-                          _sectionData(
-                            lunchPercentage,
-                            chartRadius,
-                            lunchColor,
-                          ),
-                          _sectionData(
-                            dinnerPercentage,
-                            chartRadius,
-                            dinnerColor,
-                          ),
-                          _sectionData(
-                            snackPercentage,
-                            chartRadius,
-                            snackColor,
-                          ),
-                        ],
-                        centerSpaceRadius: 0,
-                        startDegreeOffset: 0,
-                        sectionsSpace: 4,
-                        borderData: FlBorderData(show: false),
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                : FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: PieChart(
+                        duration: Duration.zero,
+                        curve: Curves.linear,
+                        PieChartData(
+                          sections: [
+                            _sectionData(
+                              summary["breakfastPercentage"]!,
+                              chartRadius,
+                              breakfastColor,
+                            ),
+                            _sectionData(
+                              summary["lunchPercentage"]!,
+                              chartRadius,
+                              lunchColor,
+                            ),
+                            _sectionData(
+                              summary["dinnerPercentage"]!,
+                              chartRadius,
+                              dinnerColor,
+                            ),
+                            _sectionData(
+                              summary["snackPercentage"]!,
+                              chartRadius,
+                              snackColor,
+                            ),
+                          ],
+                          centerSpaceRadius: 0,
+                          startDegreeOffset: 0,
+                          sectionsSpace: 4,
+                          borderData: FlBorderData(show: false),
+                        ),
                       ),
                     ),
                   ),
-                ),
-          const SizedBox(height: 36),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildMealLegend(
-                  "Bữa sáng",
-                  breakfastPercentage,
-                  breakfastCalories,
-                  breakfastColor,
-                ),
-              ),
-              Expanded(
-                child: _buildMealLegend(
-                  "Bữa trưa",
-                  lunchPercentage,
-                  lunchCalories,
-                  lunchColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildMealLegend(
-                  "Bữa tối",
-                  dinnerPercentage,
-                  dinnerCalories,
-                  dinnerColor,
-                ),
-              ),
-              Expanded(
-                child: _buildMealLegend(
-                  "Bữa phụ",
-                  snackPercentage,
-                  snackCalories,
-                  snackColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 36),
-          divider,
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(height: 36),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Tổng calories"),
-                Text("${totalCalories.round()}"),
-              ],
-            ),
-          ),
-          divider,
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Mục tiêu"),
-                Text(
-                  "${tdee.round()}",
-                  style: TextStyle(
-                    color: theme.primaryColor,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: _buildMealLegend(
+                    "Bữa sáng",
+                    summary["breakfastPercentage"]!,
+                    summary["breakfastCalories"]!,
+                    breakfastColor,
+                  ),
+                ),
+                Expanded(
+                  child: _buildMealLegend(
+                    "Bữa trưa",
+                    summary["lunchPercentage"]!,
+                    summary["lunchCalories"]!,
+                    lunchColor,
                   ),
                 ),
               ],
             ),
-          ),
-          divider,
-        ],
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _buildMealLegend(
+                    "Bữa tối",
+                    summary["dinnerPercentage"]!,
+                    summary["dinnerCalories"]!,
+                    dinnerColor,
+                  ),
+                ),
+                Expanded(
+                  child: _buildMealLegend(
+                    "Bữa phụ",
+                    summary["snackPercentage"]!,
+                    summary["snackCalories"]!,
+                    snackColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 36),
+            divider,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Tổng calories"),
+                  Text("${summary["totalDailyCalories"]!.round()}"),
+                ],
+              ),
+            ),
+            divider,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Mục tiêu"),
+                  Text(
+                    "${tdee.round()}",
+                    style: TextStyle(
+                      color: theme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            divider,
+          ],
+        ),
       ),
     );
   }

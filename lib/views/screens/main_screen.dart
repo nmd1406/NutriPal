@@ -97,7 +97,7 @@ class MainScreen extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const AddWeightRecordScreen(),
+                          builder: (context) => const WeightRecordScreen(),
                         ),
                       );
                     },

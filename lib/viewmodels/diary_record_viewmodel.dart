@@ -59,14 +59,17 @@ class DiaryRecordViewModel extends Notifier<DiaryRecordState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final record = await _firestore.getDiaryRecord(date);
+      final dateKey = DiaryRecordState._formatDateKey(date);
       if (record != null) {
-        final dateKey = DiaryRecordState._formatDateKey(date);
         state = state.copyWith(
           records: {...state.records, dateKey: record},
           isLoading: false,
         );
       } else {
-        state = state.copyWith(isLoading: true);
+        state = state.copyWith(
+          records: {...state.records, dateKey: DiaryRecord.empty()},
+          isLoading: false,
+        );
       }
     } catch (e) {
       state = state.copyWith(
@@ -112,6 +115,9 @@ class DiaryRecordViewModel extends Notifier<DiaryRecordState> {
   Future<void> addFoodRecord(Meal meal, FoodRecord newRecord) async {
     state = state.clearError();
 
+    // Rollback nếu lưu lên Firestore bị lỗi
+    final originalState = state;
+
     try {
       final currentDiaryRecord = state.recordsByDate;
       final currentFoodRecords =
@@ -132,6 +138,9 @@ class DiaryRecordViewModel extends Notifier<DiaryRecordState> {
 
       await _saveDiaryRecord(updatedDiaryRecord);
     } catch (e) {
+      state = originalState.copyWith(
+        errorMessage: "Failed to add food record: ${e.toString()}",
+      );
       await _loadDiaryRecord(state.selectedDate);
     }
   }
@@ -173,6 +182,9 @@ class DiaryRecordViewModel extends Notifier<DiaryRecordState> {
   Future<void> addWaterRecord(WaterRecord newRecord) async {
     state = state.clearError();
 
+    // Rollback
+    final originalState = state;
+
     try {
       final currentDiaryRecord = state.recordsByDate;
       final currentWaterRecords = currentDiaryRecord.waterRecords;
@@ -189,6 +201,9 @@ class DiaryRecordViewModel extends Notifier<DiaryRecordState> {
 
       await _saveDiaryRecord(updatedDiaryRecord);
     } catch (e) {
+      state = originalState.copyWith(
+        errorMessage: "Failed to add water record: ${e.toString()}",
+      );
       await _loadDiaryRecord(state.selectedDate);
     }
   }
