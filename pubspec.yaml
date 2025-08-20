@@ -46,6 +46,8 @@ dependencies:
   fl_chart: ^1.0.0
   image_picker: ^1.2.0
   skeletonizer: ^2.1.0+1
+  firebase_app_check: ^0.3.2+10
+  flutter_image_compress: ^2.4.0
 
 dev_dependencies:
   flutter_test:
