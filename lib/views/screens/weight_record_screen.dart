@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:nutripal/models/weight_record.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/viewmodels/weight_record_viewmodel.dart';
@@ -83,26 +82,30 @@ class _WeightRecordScreenState extends ConsumerState<WeightRecordScreen> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final image = await ref
+        .watch(weightRecordViewModelProvider.notifier)
+        .pickImageFromGallery();
 
-    if (picked == null) {
+    if (image == null) {
       return;
     }
 
     setState(() {
-      _selectedImage = File(picked.path);
+      _selectedImage = image;
     });
   }
 
   Future<void> _pickImageFromCamera() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.camera);
+    final image = await ref
+        .watch(weightRecordViewModelProvider.notifier)
+        .pickImageFromCamera();
 
-    if (picked == null) {
+    if (image == null) {
       return;
     }
 
     setState(() {
-      _selectedImage = File(picked.path);
+      _selectedImage = image;
     });
   }
 
