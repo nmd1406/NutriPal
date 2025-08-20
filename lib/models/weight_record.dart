@@ -1,7 +1,4 @@
-import 'dart:async' show Completer;
 import 'dart:io' show File;
-
-import 'package:flutter/cupertino.dart';
 
 class WeightRecord {
   final double weight;
