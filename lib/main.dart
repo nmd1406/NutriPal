@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/firebase_options.dart';
+import 'package:nutripal/providers/service_provider.dart';
+import 'package:nutripal/services/notification_service.dart';
 import 'package:nutripal/views/widgets/auth_wrapper.dart';
 
 void main() async {
@@ -14,8 +16,26 @@ void main() async {
   runApp(ProviderScope(child: const NutriPal()));
 }
 
-class NutriPal extends StatelessWidget {
+class NutriPal extends ConsumerStatefulWidget {
   const NutriPal({super.key});
+
+  @override
+  ConsumerState<NutriPal> createState() => _NutriPalState();
+}
+
+class _NutriPalState extends ConsumerState<NutriPal> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    final NotificationService notificationService = ref.read(
+      notificationServiceProvider,
+    );
+    await notificationService.initialize();
+  }
 
   @override
   Widget build(BuildContext context) {
