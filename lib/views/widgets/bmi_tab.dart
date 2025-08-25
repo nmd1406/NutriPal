@@ -22,7 +22,7 @@ class _BMITabState extends ConsumerState<BMITab> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profileState = ref.read(profileProvider);
+      final profileState = ref.read(profileViewModelProvider);
       profileState.whenData((Profile profile) {
         ref.read(bmiViewModelProvider.notifier).setUserProfile(profile);
         _heightController.text = _formatDouble(profile.height);
@@ -55,7 +55,7 @@ class _BMITabState extends ConsumerState<BMITab> {
     Size deviceSize = MediaQuery.of(context).size;
     final bmiState = ref.watch(bmiViewModelProvider);
     final bmiViewModel = ref.read(bmiViewModelProvider.notifier);
-    final profileState = ref.watch(profileProvider);
+    final profileState = ref.watch(profileViewModelProvider);
 
     return profileState.when(
       data: (profile) =>

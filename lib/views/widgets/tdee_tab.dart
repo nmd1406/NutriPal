@@ -25,7 +25,7 @@ class _TDEETabState extends ConsumerState<TDEETab> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profileState = ref.read(profileProvider);
+      final profileState = ref.read(profileViewModelProvider);
 
       profileState.whenData((Profile profile) {
         ref.read(tdeeViewModelProvider.notifier).setProfile(profile);
@@ -59,7 +59,7 @@ class _TDEETabState extends ConsumerState<TDEETab> {
   Widget build(BuildContext context) {
     final secondaryColor = Theme.of(context).colorScheme.secondary;
 
-    final profileState = ref.watch(profileProvider);
+    final profileState = ref.watch(profileViewModelProvider);
 
     return profileState.when(
       data: (Profile profile) {
