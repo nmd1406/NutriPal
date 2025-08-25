@@ -7,7 +7,10 @@ class WaterTrackingViewModel extends Notifier<void> {
   @override
   void build() {}
 
-  void addWaterRecord({required double amount, required TimeOfDay consumedAt}) {
+  Future<void> addWaterRecord({
+    required double amount,
+    required TimeOfDay consumedAt,
+  }) async {
     final WaterRecord newRecord = WaterRecord(
       amount: amount,
       consumedAt: consumedAt,
@@ -17,7 +20,7 @@ class WaterTrackingViewModel extends Notifier<void> {
     diaryNotifier.addWaterRecord(newRecord);
   }
 
-  void removeWaterRecord(int recordIndex) {
+  Future<void> removeWaterRecord(int recordIndex) async {
     final diaryNotifier = ref.read(diaryRecordViewModelProvider.notifier);
     diaryNotifier.removeWaterRecord(recordIndex);
   }

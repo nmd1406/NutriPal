@@ -34,7 +34,9 @@ class _NutriPalState extends ConsumerState<NutriPal> {
     final NotificationService notificationService = ref.read(
       notificationServiceProvider,
     );
+    final waterReminderService = ref.read(waterReminderServiceProvider);
     await notificationService.initialize();
+    await waterReminderService.initializeDailyReminders();
   }
 
   @override

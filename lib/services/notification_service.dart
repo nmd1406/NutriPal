@@ -7,6 +7,8 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  static const int _waterReminderBaseId = 1000;
+
   Future<void> initialize() async {
     tz.initializeTimeZones();
 
@@ -26,33 +28,70 @@ class NotificationService {
     }
   }
 
-  Future<void> scheduleNotification(DateTime scheduledTime) async {
-    await _notifications.cancel(1);
+  Future<void> scheduleDailyWaterReminders() async {
+    await cancelWaterReminders();
 
     const androidDetails = AndroidNotificationDetails(
-      "water_reminder",
-      "Nhắc nhở uống nước",
-      channelDescription: "Thông báo nhắc nhở uống nước định kỳ",
+      "water_reminder_daily",
+      "Nhắc nhở uống nước hàng ngày",
+      channelDescription: "Thông báo nhắc nhở uống nước từ 8h sáng đến 8h tối",
       importance: Importance.high,
       priority: Priority.high,
+      enableVibration: true,
+      playSound: true,
     );
 
     const notificationDetails = NotificationDetails(android: androidDetails);
 
-    final tz.TZDateTime tzScheduledateTime = tz.TZDateTime.from(
-      scheduledTime,
-      tz.local,
-    );
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-    _notifications.zonedSchedule(
-      1,
-      "Đã đến giờ uống nước!",
+    for (int hour = 8; hour <= 20; hour++) {
+      final scheduledTime = today.add(Duration(hours: hour));
+
+      final actualScheduledTime = scheduledTime.isBefore(now)
+          ? scheduledTime.add(const Duration(days: 1))
+          : scheduledTime;
+
+      final tz.TZDateTime tzScheduledTime = tz.TZDateTime.from(
+        actualScheduledTime,
+        tz.local,
+      );
+
+      final notificationId = _waterReminderBaseId + hour;
+
+      await _notifications.zonedSchedule(
+        notificationId,
+        "💧 Đã đến giờ uống nước!",
+        _getRandomWaterMessage(),
+        tzScheduledTime,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+  }
+
+  String _getRandomWaterMessage() {
+    final messages = [
       "Bạn đã uống nước chưa? Hãy bổ sung nước để duy trì sức khoẻ tốt nhất!",
-      tzScheduledateTime,
-      notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
+      "Đừng quên uống nước! Cơ thể bạn đang cần nước.",
+      "Thời gian uống nước đã đến! 💧",
+      "Hãy duy trì đủ nước cho cơ thể bạn!",
+      "Uống nước thường xuyên để giữ gìn sức khỏe!",
+      "Cơ thể bạn cần nước! Hãy uống một ly nước ngay.",
+    ];
+
+    final now = DateTime.now();
+    final index = now.hour % messages.length;
+    return messages[index];
+  }
+
+  Future<void> cancelWaterReminders() async {
+    for (int hour = 8; hour <= 20; hour++) {
+      final notificationId = _waterReminderBaseId + hour;
+      await _notifications.cancel(notificationId);
+    }
   }
 
   Future<void> cancelAllNotifications() async {
