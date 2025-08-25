@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
+import 'package:nutripal/views/screens/nutrition_screen.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class CaloriesCard extends ConsumerWidget {
@@ -18,103 +19,111 @@ class CaloriesCard extends ConsumerWidget {
     int remaining = baseGoal - food;
     double progress = food / baseGoal;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.4), width: 1),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
+    return GestureDetector(
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => NutritionScreen(page: 0))),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.4),
+            width: 1,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 21),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Calories",
-              style: TextStyle(
-                color: primaryColor,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 21),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Calories",
+                style: TextStyle(
+                  color: primaryColor,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            Text(
-              "Còn lại = Mục tiêu - Thức ăn",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 12),
+              Text(
+                "Còn lại = Mục tiêu - Thức ăn",
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                CircularPercentIndicator(
-                  radius: 69,
-                  lineWidth: 11,
-                  animation: true,
-                  percent: progress.clamp(0, 1.0),
-                  backgroundColor: Colors.grey.shade300,
-                  progressColor: Colors.orange,
-                  circularStrokeCap: CircularStrokeCap.round,
-                  center: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (bounds) => RadialGradient(
-                          colors: <Color>[
-                            primaryColor,
-                            Theme.of(context).colorScheme.secondary,
-                          ],
-                          radius: 2,
-                          tileMode: TileMode.clamp,
-                          center: Alignment.center,
-                        ).createShader(bounds),
-                        child: Text(
-                          remaining.toString(),
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  CircularPercentIndicator(
+                    radius: 69,
+                    lineWidth: 11,
+                    animation: true,
+                    percent: progress.clamp(0, 1.0),
+                    backgroundColor: Colors.grey.shade300,
+                    progressColor: Colors.orange,
+                    circularStrokeCap: CircularStrokeCap.round,
+                    center: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ShaderMask(
+                          blendMode: BlendMode.srcIn,
+                          shaderCallback: (bounds) => RadialGradient(
+                            colors: <Color>[
+                              primaryColor,
+                              Theme.of(context).colorScheme.secondary,
+                            ],
+                            radius: 2,
+                            tileMode: TileMode.clamp,
+                            center: Alignment.center,
+                          ).createShader(bounds),
+                          child: Text(
+                            remaining.toString(),
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
+                        Text(
+                          "Còn lại",
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Column(
+                    children: [
+                      _buildInfoItem(
+                        label: "Mục tiêu",
+                        value: baseGoal.toString(),
+                        icon: Icons.flag,
+                        color: Colors.grey,
                       ),
-                      Text(
-                        "Còn lại",
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      const SizedBox(height: 12),
+                      _buildInfoItem(
+                        label: "Thức ăn",
+                        value: food.toString(),
+                        icon: Icons.restaurant,
+                        color: Colors.orange,
                       ),
                     ],
                   ),
-                ),
-
-                Column(
-                  children: [
-                    _buildInfoItem(
-                      label: "Mục tiêu",
-                      value: baseGoal.toString(),
-                      icon: Icons.flag,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildInfoItem(
-                      label: "Thức ăn",
-                      value: food.toString(),
-                      icon: Icons.restaurant,
-                      color: Colors.orange,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

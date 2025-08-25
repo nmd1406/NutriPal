@@ -6,7 +6,8 @@ import 'package:nutripal/views/widgets/date_selector.dart';
 import 'package:nutripal/views/widgets/macros_tab.dart';
 
 class NutritionScreen extends ConsumerStatefulWidget {
-  const NutritionScreen({super.key});
+  final int page;
+  const NutritionScreen({super.key, this.page = 0});
 
   @override
   ConsumerState<NutritionScreen> createState() => _NutritionScreenState();
@@ -21,7 +22,11 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.page,
+    );
   }
 
   @override
