@@ -1,15 +1,21 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:nutripal/models/profile.dart';
 import 'package:nutripal/services/auth_service.dart';
 import 'package:nutripal/views/screens/welcome_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileViewModel extends AsyncNotifier<Profile> {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   @override
   FutureOr<Profile> build() async {
@@ -29,8 +35,10 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     return Profile.empty();
   }
 
-  void updateUsername(String username) {
+  Future<void> updateUsername(String username) async {
     final currentProfile = state.valueOrNull ?? Profile.empty();
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("username", username);
     state = AsyncValue.data(currentProfile.copyWith(username: username));
   }
 
@@ -156,6 +164,56 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     return null;
   }
 
+  Future<File?> _compressImage(File imageFile) async {
+    try {
+      final compressedFile = await FlutterImageCompress.compressAndGetFile(
+        imageFile.absolute.path,
+        "${imageFile.parent.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg",
+        quality: 86,
+        minWidth: 600,
+        minHeight: 600,
+      );
+
+      if (compressedFile == null) {
+        throw Exception("Failed to compress image");
+      }
+
+      return File(compressedFile.path);
+    } catch (e) {
+      throw Exception("Image compression failed: ${e.toString()}");
+    }
+  }
+
+  Future<File?> pickImageFromCamera() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.camera);
+    return picked != null ? File(picked.path) : null;
+  }
+
+  Future<File?> pickImageFromGallery() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    return picked != null ? File(picked.path) : null;
+  }
+
+  Future<String?> uploadImage(File image) async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      throw Exception("User not authenticated");
+    }
+    final compressedFile = await _compressImage(image);
+    if (compressedFile == null) {
+      throw Exception("Failed to compress image");
+    }
+
+    String fileName = "${DateTime.now().millisecondsSinceEpoch}";
+    final storageRef = _storage.ref().child(
+      "user_avatars/${user.uid}/$fileName",
+    );
+    final uploadTask = storageRef.putFile(compressedFile);
+    final snapshot = await uploadTask;
+
+    return await snapshot.ref.getDownloadURL();
+  }
+
   Future<void> updateProfileField({
     String? username,
     String? imageUrl,
@@ -163,6 +221,9 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     int? age,
     double? height,
     double? weight,
+    ActivityLevel? activityLevel,
+    Goal? goal,
+    double? targetWeight,
   }) async {
     final user = _authService.currentUser;
     if (user == null) {
@@ -177,6 +238,9 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
       age: age,
       height: height,
       weight: weight,
+      activityLevel: activityLevel,
+      goal: goal,
+      targetWeight: targetWeight,
     );
 
     state = const AsyncValue.loading();
@@ -202,7 +266,12 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
         throw Exception("User not authenticated");
       }
 
-      final profileWithUid = currentProfile.copyWith(uid: user.uid);
+      Profile profileWithUid = currentProfile.copyWith(uid: user.uid);
+      if (profileWithUid.username.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final fallbackUsername = prefs.getString("username");
+        profileWithUid = profileWithUid.copyWith(username: fallbackUsername);
+      }
       await _firestore
           .collection("profiles")
           .doc(profileWithUid.uid)
@@ -221,6 +290,25 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
 
 final profileViewModelProvider =
     AsyncNotifierProvider<ProfileViewModel, Profile>(() => ProfileViewModel());
+
+final goalProvider = Provider<Goal>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+  return profileState.when(
+    data: (profile) => profile.goal,
+    error: (_, _) => Goal.maintain,
+    loading: () => Goal.maintain,
+  );
+});
+
+final activityLevelProvider = Provider<ActivityLevel>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.activityLevel,
+    error: (_, _) => ActivityLevel.sedentary,
+    loading: () => ActivityLevel.sedentary,
+  );
+});
 
 final tdeeProvider = Provider<double>((ref) {
   final profileState = ref.watch(profileViewModelProvider);
