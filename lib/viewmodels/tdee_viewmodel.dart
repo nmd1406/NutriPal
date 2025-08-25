@@ -47,10 +47,10 @@ class TDEEViewModel extends StateNotifier<Profile> {
 
   void calculateTDEE() {
     final ProfileViewModel profileViewModel = ref.read(
-      profileProvider.notifier,
+      profileViewModelProvider.notifier,
     );
 
-    profileViewModel.updateActivityLevel(state.activityLevel!.value);
+    profileViewModel.updateActivityLevel(state.activityLevel!);
     profileViewModel.updateGoal(state.goal!.value);
     profileViewModel.updateTargetWeight(state.targetWeight.toString());
   }

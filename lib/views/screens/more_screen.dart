@@ -4,6 +4,7 @@ import 'package:nutripal/viewmodels/auth_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/screens/health_indicator_screen.dart';
 import 'package:nutripal/views/screens/nutrition_screen.dart';
+import 'package:nutripal/views/screens/profile_screen.dart';
 import 'package:nutripal/views/widgets/feature_list_tile.dart';
 import 'package:nutripal/views/widgets/info_card.dart';
 
@@ -16,9 +17,8 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authViewModelProvider);
     final authViewModel = ref.read(authViewModelProvider.notifier);
-    final profileState = ref.watch(profileProvider);
+    final profileState = ref.watch(profileViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -38,18 +38,18 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
         ),
-        title: authState.when(
-          data: (user) => Padding(
+        title: profileState.when(
+          data: (profile) => Padding(
             padding: const EdgeInsetsGeometry.all(12),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 26,
-                  child: ClipOval(child: Image.network(user!.imageUrl)),
+                  child: ClipOval(child: Image.network(profile.imageUrl)),
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  user.username,
+                  profile.username,
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 23),
                 ),
               ],
@@ -84,6 +84,13 @@ class MoreScreen extends ConsumerWidget {
           ),
 
           FeatureListTile(
+            icon: Icons.person,
+            title: "Cá nhân",
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            ),
+          ),
+          FeatureListTile(
             icon: Icons.pie_chart_outline,
             title: "Dinh dưỡng",
             onTap: () => Navigator.of(context).push(
@@ -100,7 +107,6 @@ class MoreScreen extends ConsumerWidget {
               ),
             ),
           ),
-          FeatureListTile(icon: Icons.settings, title: "Cài đặt", onTap: () {}),
           FeatureListTile(
             icon: Icons.login_outlined,
             title: "Đăng xuất",

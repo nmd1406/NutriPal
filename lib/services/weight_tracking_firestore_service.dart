@@ -60,7 +60,6 @@ class WeightTrackingFirestoreService {
     String? imageUrl;
     if (record.image != null) {
       imageUrl = await _uploadImage(record.image!);
-      print("save: ${imageUrl}");
       record = record.copyWith(imageUrl: imageUrl);
     }
 
@@ -101,7 +100,6 @@ class WeightTrackingFirestoreService {
       String? imageUrl;
       if (newRecord.image != null) {
         imageUrl = await _uploadImage(newRecord.image!);
-        print("update: ${imageUrl}");
 
         newRecord = newRecord.copyWith(imageUrl: imageUrl);
       }

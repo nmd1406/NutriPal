@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/auth_viewmodel.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
+import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/widgets/calories_card.dart';
 import 'package:nutripal/views/widgets/macros_card.dart';
 import 'package:nutripal/views/widgets/water_card.dart';
@@ -12,27 +13,16 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authViewModelProvider);
+    final profileState = ref.watch(profileViewModelProvider);
 
     final diaryRecordState = ref.watch(diaryRecordViewModelProvider);
     ref.read(diaryRecordViewModelProvider.notifier).changeDate(DateTime.now());
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12, top: 18),
-            child: IconButton(
-              onPressed: () {},
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-              ),
-              icon: const Icon(Icons.notifications, color: Colors.white),
-            ),
-          ),
-        ],
+
         title: Skeletonizer(
-          enabled: authState.isLoading,
+          enabled: profileState.isLoading,
           child: Padding(
             padding: const EdgeInsets.only(top: 24),
             child: Column(
@@ -47,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  authState.when(
+                  profileState.when(
                     data: (user) => user?.username ?? "User",
                     error: (_, _) => "Lỗi",
                     loading: () => "Đang tải...",

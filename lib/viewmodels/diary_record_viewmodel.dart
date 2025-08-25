@@ -13,7 +13,7 @@ class DiaryRecordState {
   DiaryRecordState({
     DateTime? selectedDate,
     this.records = const {},
-    this.isLoading = false,
+    this.isLoading = true,
     this.errorMessage,
   }) : selectedDate = selectedDate ?? DateTime.now();
 

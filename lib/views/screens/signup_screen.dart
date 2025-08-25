@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutripal/viewmodels/auth_viewmodel.dart';
+import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/screens/login_screen.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -30,6 +31,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
     final authViewModel = ref.read(authViewModelProvider.notifier);
+    final profileViewModel = ref.read(profileViewModelProvider.notifier);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -54,7 +56,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               TextFormField(
                 controller: _usernameController,
                 autocorrect: false,
-                validator: authViewModel.validateUsername,
+                validator: profileViewModel.validateUsername,
                 decoration: InputDecoration(
                   labelText: "Tên người dùng",
                   labelStyle: TextStyle(fontSize: 15),
@@ -113,14 +115,29 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ElevatedButton(
                 onPressed: authState.isLoading
                     ? null
-                    : () {
+                    : () async {
                         if (_formKey.currentState!.validate()) {
-                          authViewModel.signup(
-                            username: _usernameController.text.trim(),
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text.trim(),
-                            context: context,
-                          );
+                          try {
+                            // Tạo tài khoản
+                            await authViewModel.signup(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text.trim(),
+                              context: context,
+                            );
+
+                            // Sau khi tạo tài khoản thành công, cập nhật username vào ProfileViewModel
+                            final authUser = ref
+                                .read(authViewModelProvider)
+                                .value;
+                            if (authUser != null && mounted) {
+                              // Cập nhật username trong ProfileViewModel để sẵn sàng cho màn hình setup
+                              profileViewModel.updateUsername(
+                                _usernameController.text.trim(),
+                              );
+                            }
+                          } catch (e) {
+                            // Lỗi sẽ được hiển thị qua authState.when
+                          }
                         }
                       },
                 style: ElevatedButton.styleFrom(
