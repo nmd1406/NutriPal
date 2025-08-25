@@ -2,6 +2,8 @@ import 'package:flutter/material.dart' show Colors, Color, IconData, Icons;
 
 class Profile {
   final String uid;
+  final String username;
+  final String imageUrl;
   final String gender;
   final int age;
   final double height;
@@ -12,6 +14,8 @@ class Profile {
 
   const Profile({
     required this.uid,
+    required this.username,
+    required this.imageUrl,
     required this.gender,
     required this.age,
     required this.height,
@@ -23,6 +27,8 @@ class Profile {
 
   Profile copyWith({
     String? uid,
+    String? username,
+    String? imageUrl,
     String? gender,
     int? age,
     double? height,
@@ -33,6 +39,8 @@ class Profile {
   }) {
     return Profile(
       uid: uid ?? this.uid,
+      username: username ?? this.username,
+      imageUrl: imageUrl ?? this.imageUrl,
       gender: gender ?? this.gender,
       age: age ?? this.age,
       height: height ?? this.height,
@@ -43,15 +51,20 @@ class Profile {
     );
   }
 
+  @override
+  String toString() => "$uid, $username, $goal, $activityLevel";
+
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
+      'username': username,
+      'imageUrl': imageUrl,
       'gender': gender,
       'age': age,
       'height': height,
       'weight': weight,
-      'activityLevel': activityLevel,
-      'goal': goal,
+      'activityLevel': activityLevel?.value,
+      'goal': goal?.value,
       'targetWeight': targetWeight,
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
@@ -61,6 +74,10 @@ class Profile {
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
       uid: json['uid'] as String,
+      username: json['username'] as String? ?? "",
+      imageUrl:
+          json['imageUrl'] as String? ??
+          "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
       gender: json['gender'] as String,
       age: json['age'] as int,
       height: (json['height'] as num).toDouble(),
@@ -74,6 +91,9 @@ class Profile {
   static Profile empty() {
     return Profile(
       uid: "",
+      username: "",
+      imageUrl:
+          "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
       gender: "",
       age: 0,
       height: 0,
@@ -86,7 +106,11 @@ class Profile {
 
   bool get isValid {
     bool basicInfoValid =
-        gender.isNotEmpty && age > 0 && height > 0 && weight > 0;
+        username.isNotEmpty &&
+        gender.isNotEmpty &&
+        age > 0 &&
+        height > 0 &&
+        weight > 0;
     bool activityValid = activityLevel != null;
     bool goalValid = goal != null;
 
@@ -98,7 +122,8 @@ class Profile {
   }
 
   bool get isEmpty {
-    return gender.isEmpty &&
+    return username.isEmpty &&
+        gender.isEmpty &&
         age == 0 &&
         height == 0 &&
         weight == 0 &&

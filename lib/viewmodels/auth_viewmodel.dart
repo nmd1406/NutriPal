@@ -18,15 +18,6 @@ class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
     return null;
   }
 
-  String? validateUsername(String? enteredUsername) {
-    if (enteredUsername == null ||
-        enteredUsername.trim().isEmpty ||
-        enteredUsername.trim().length < 6) {
-      return "Tên người dùng phải có từ 6 kí tự trở lên";
-    }
-    return null;
-  }
-
   String? validateEmail(String? enteredEmail) {
     if (enteredEmail == null || enteredEmail.isEmpty) {
       return 'Vui lòng nhập email';
@@ -49,7 +40,6 @@ class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
   }
 
   Future<void> signup({
-    required String username,
     required String email,
     required String password,
     required BuildContext context,
@@ -57,11 +47,7 @@ class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
-      final user = await _authService.signup(
-        username: username,
-        email: email,
-        password: password,
-      );
+      final user = await _authService.signup(email: email, password: password);
 
       await Future.delayed(Duration(milliseconds: 120));
       if (user != null && context.mounted) {

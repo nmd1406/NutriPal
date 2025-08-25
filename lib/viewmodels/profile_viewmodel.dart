@@ -29,6 +29,16 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     return Profile.empty();
   }
 
+  void updateUsername(String username) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(username: username));
+  }
+
+  void updateImageUrl(String imageUrl) {
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    state = AsyncValue.data(currentProfile.copyWith(imageUrl: imageUrl));
+  }
+
   void updateGender(String gender) {
     final currentProfile = state.valueOrNull ?? Profile.empty();
     state = AsyncValue.data(currentProfile.copyWith(gender: gender));
@@ -52,12 +62,10 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     state = AsyncValue.data(currentProfile.copyWith(weight: weight));
   }
 
-  void updateActivityLevel(String activityLevel) {
+  void updateActivityLevel(ActivityLevel activityLevel) {
     final currentProfile = state.valueOrNull ?? Profile.empty();
     state = AsyncValue.data(
-      currentProfile.copyWith(
-        activityLevel: ActivityLevel.fromValue(activityLevel),
-      ),
+      currentProfile.copyWith(activityLevel: activityLevel),
     );
   }
 
@@ -74,6 +82,15 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     state = AsyncValue.data(
       currentProfile.copyWith(targetWeight: targetWeight),
     );
+  }
+
+  String? validateUsername(String? username) {
+    if (username == null ||
+        username.trim().isEmpty ||
+        username.trim().length < 6) {
+      return "Tên người dùng phải có từ 6 kí tự trở lên";
+    }
+    return null;
   }
 
   String? validateGender(String? gender) {
@@ -139,6 +156,39 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
     return null;
   }
 
+  Future<void> updateProfileField({
+    String? username,
+    String? imageUrl,
+    String? gender,
+    int? age,
+    double? height,
+    double? weight,
+  }) async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      throw Exception("User not authenticated");
+    }
+
+    final currentProfile = state.valueOrNull ?? Profile.empty();
+    final updatedProfile = currentProfile.copyWith(
+      username: username,
+      imageUrl: imageUrl,
+      gender: gender,
+      age: age,
+      height: height,
+      weight: weight,
+    );
+
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _firestore
+          .collection("profiles")
+          .doc(user.uid)
+          .update(updatedProfile.toJson());
+      return updatedProfile;
+    });
+  }
+
   Future<void> submitProfile(BuildContext context) async {
     final currentProfile = state.valueOrNull ?? Profile.empty();
     if (!currentProfile.isValid) {
@@ -169,12 +219,11 @@ class ProfileViewModel extends AsyncNotifier<Profile> {
   }
 }
 
-final profileProvider = AsyncNotifierProvider<ProfileViewModel, Profile>(
-  () => ProfileViewModel(),
-);
+final profileViewModelProvider =
+    AsyncNotifierProvider<ProfileViewModel, Profile>(() => ProfileViewModel());
 
 final tdeeProvider = Provider<double>((ref) {
-  final profileState = ref.watch(profileProvider);
+  final profileState = ref.watch(profileViewModelProvider);
 
   return profileState.when(
     data: (Profile profile) => profile.tdee,
@@ -184,7 +233,7 @@ final tdeeProvider = Provider<double>((ref) {
 });
 
 final targetMacrosProvider = Provider<Map<String, double>>((ref) {
-  final profileState = ref.watch(profileProvider);
+  final profileState = ref.watch(profileViewModelProvider);
 
   return profileState.when(
     data: (Profile profile) => profile.macroPercentagesTarget,
@@ -194,7 +243,7 @@ final targetMacrosProvider = Provider<Map<String, double>>((ref) {
 });
 
 final recommendedDailyWaterProvider = Provider<double>((ref) {
-  final profileState = ref.watch(profileProvider);
+  final profileState = ref.watch(profileViewModelProvider);
 
   return profileState.when(
     data: (Profile profile) => profile.recommendedDailyWater,
@@ -204,11 +253,63 @@ final recommendedDailyWaterProvider = Provider<double>((ref) {
 });
 
 final currentWeightProvider = Provider<double>((ref) {
-  final profileState = ref.watch(profileProvider);
+  final profileState = ref.watch(profileViewModelProvider);
 
   return profileState.when(
     data: (Profile profile) => profile.weight,
     error: (_, _) => 0,
     loading: () => 0,
+  );
+});
+
+final genderProvider = Provider<String>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.gender,
+    error: (_, _) => "",
+    loading: () => "",
+  );
+});
+
+final ageProvider = Provider<int>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.age,
+    error: (_, _) => 0,
+    loading: () => 0,
+  );
+});
+
+final heightProvider = Provider<double>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.height,
+    error: (_, _) => 0.0,
+    loading: () => 0.0,
+  );
+});
+
+final usernameFromProfileProvider = Provider<String>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.username,
+    error: (_, _) => "",
+    loading: () => "",
+  );
+});
+
+final imageUrlFromProfileProvider = Provider<String>((ref) {
+  final profileState = ref.watch(profileViewModelProvider);
+
+  return profileState.when(
+    data: (profile) => profile.imageUrl,
+    error: (_, _) =>
+        "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
+    loading: () =>
+        "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
   );
 });

@@ -10,7 +10,6 @@ class AuthService {
   Stream<User?> get authState => _auth.authStateChanges();
 
   Future<AuthUser?> signup({
-    required String username,
     required String email,
     required String password,
   }) async {
@@ -23,10 +22,7 @@ class AuthService {
       if (credential.user != null) {
         final newUser = AuthUser(
           uid: credential.user!.uid,
-          username: username,
           email: email,
-          imageUrl:
-              "https://firebasestorage.googleapis.com/v0/b/flutter-chat-app-da95b.appspot.com/o/avatar-default-svgrepo-com%20(1).png?alt=media&token=277d8bac-d5be-4ce8-a7a3-03bbe79906ae",
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -78,27 +74,19 @@ class AuthService {
     return;
   }
 
-  Future<void> updateUserData({
-    required String uid,
-    String? username,
-    String? imageUrl,
-  }) async {
+  Future<void> updateUserData({required String uid, String? email}) async {
     try {
-      final Map<String, dynamic> updatedProfileData = {
-        "updatedAt": DateTime.now(),
+      final Map<String, dynamic> updatedData = {
+        "updatedAt": DateTime.now().toIso8601String(),
       };
 
-      if (username != null) {
-        updatedProfileData["username"] = username;
+      if (email != null) {
+        updatedData["email"] = email;
       }
 
-      if (imageUrl != null) {
-        updatedProfileData["imageUrl"] = imageUrl;
-      }
-
-      await _firestore.collection("users").doc(uid).update(updatedProfileData);
+      await _firestore.collection("users").doc(uid).update(updatedData);
     } catch (e) {
-      throw Exception("Failed to update profile: $e");
+      throw Exception("Failed to update user data: $e");
     }
   }
 

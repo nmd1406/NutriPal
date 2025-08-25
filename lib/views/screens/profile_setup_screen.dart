@@ -61,8 +61,18 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     }
   }
 
+  void _resetStep() {
+    setState(() {
+      _currentStep = 0;
+    });
+
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    }
+  }
+
   bool _canProceedFromCurrentStep() {
-    final profile = ref.watch(profileProvider).valueOrNull;
+    final profile = ref.watch(profileViewModelProvider).valueOrNull;
     if (profile == null) {
       return false;
     }
@@ -90,14 +100,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   void _handleNextStep() {
-    final viewModel = ref.read(profileProvider.notifier);
+    final viewModel = ref.read(profileViewModelProvider.notifier);
 
     if (_currentStep == 0) {
       _nextStep();
     } else if (_currentStep == 1) {
       _nextStep();
     } else if (_currentStep == 2) {
-      final profile = ref.read(profileProvider).valueOrNull;
+      final profile = ref.read(profileViewModelProvider).valueOrNull;
+      print(profile);
       final needsTargetWeight =
           profile?.goal == Goal.lose || profile?.goal == Goal.gain;
 
@@ -113,8 +124,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ref.read(profileProvider.notifier);
-    final profileState = ref.watch(profileProvider);
+    final viewModel = ref.read(profileViewModelProvider.notifier);
+    final profileState = ref.watch(profileViewModelProvider);
 
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
@@ -170,8 +181,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 },
                 children: [
                   BasicInfoPage(
-                    profile: profile,
-                    viewModel: viewModel,
                     formKey: _basicInfoFormKey,
                     ageController: _ageController,
                     heightController: _heightController,
@@ -179,8 +188,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   ),
                   ActivityLevelPage(profile: profile, viewModel: viewModel),
                   GoalPage(
-                    profile: profile,
-                    viewModel: viewModel,
                     targetWeightController: _targetWeightController,
                     targetFormKey: _targetFormKey,
                   ),
@@ -207,12 +214,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 style: TextStyle(color: Colors.grey[600]),
               ),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Thử lại'),
-              ),
+              ElevatedButton(onPressed: _resetStep, child: Text('Thử lại')),
             ],
           ),
         ),

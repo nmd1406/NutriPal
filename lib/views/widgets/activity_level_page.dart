@@ -34,7 +34,7 @@ class ActivityLevelPage extends StatelessWidget {
             ...ActivityLevel.values.map((activity) {
               final isSelected = profile.activityLevel == activity;
               return GestureDetector(
-                onTap: () => viewModel.updateActivityLevel(activity.value),
+                onTap: () => viewModel.updateActivityLevel(activity),
                 child: Container(
                   margin: const EdgeInsets.all(12),
                   padding: const EdgeInsets.all(10),
