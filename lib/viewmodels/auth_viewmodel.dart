@@ -39,6 +39,16 @@ class AuthViewModel extends AutoDisposeAsyncNotifier<AuthUser?> {
     return null;
   }
 
+  String? validateConfirmPassword(
+    String? newPassword,
+    String? newPasswordConfirm,
+  ) {
+    if (newPassword != newPasswordConfirm) {
+      return "Mật khẩu không khớp";
+    }
+    return null;
+  }
+
   Future<void> signup({
     required String email,
     required String password,
@@ -100,6 +110,42 @@ class ResetPasswordNotifier extends AutoDisposeAsyncNotifier<void> {
   }
 }
 
+class ChangePasswordNotifier extends AutoDisposeAsyncNotifier<void> {
+  final _authService = AuthService();
+
+  @override
+  FutureOr<void> build() {}
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    state = const AsyncValue.loading();
+
+    state = await AsyncValue.guard(() async {
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    });
+  }
+
+  Future<String?> validateCurrentPassword(String currentPassword) async {
+    try {
+      bool isValid = await _authService.validateCurrentPassword(
+        currentPassword,
+      );
+
+      if (!isValid) {
+        return "Mật khẩu hiện tại không đúng";
+      }
+      return null;
+    } catch (e) {
+      return "Không thể xác thực mật khẩu";
+    }
+  }
+}
+
 final authViewModelProvider =
     AutoDisposeAsyncNotifierProvider<AuthViewModel, AuthUser?>(
       () => AuthViewModel(),
@@ -108,4 +154,9 @@ final authViewModelProvider =
 final resetPasswordProvider =
     AutoDisposeAsyncNotifierProvider<ResetPasswordNotifier, void>(
       () => ResetPasswordNotifier(),
+    );
+
+final changePasswordProvider =
+    AutoDisposeAsyncNotifierProvider<ChangePasswordNotifier, void>(
+      () => ChangePasswordNotifier(),
     );

@@ -74,19 +74,44 @@ class AuthService {
     return;
   }
 
-  Future<void> updateUserData({required String uid, String? email}) async {
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
     try {
-      final Map<String, dynamic> updatedData = {
-        "updatedAt": DateTime.now().toIso8601String(),
-      };
-
-      if (email != null) {
-        updatedData["email"] = email;
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception("Người dùng chưa đăng nhập");
       }
 
-      await _firestore.collection("users").doc(uid).update(updatedData);
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
     } catch (e) {
-      throw Exception("Failed to update user data: $e");
+      _handleAuthException(e);
+    }
+  }
+
+  Future<bool> validateCurrentPassword(String currentPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        return false;
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
