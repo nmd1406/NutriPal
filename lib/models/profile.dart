@@ -8,8 +8,8 @@ class Profile {
   final int age;
   final double height;
   final double weight;
-  final ActivityLevel? activityLevel;
-  final Goal? goal;
+  final ActivityLevel activityLevel;
+  final Goal goal;
   final double targetWeight;
 
   const Profile({
@@ -20,8 +20,8 @@ class Profile {
     required this.age,
     required this.height,
     required this.weight,
-    this.activityLevel,
-    this.goal,
+    required this.activityLevel,
+    required this.goal,
     this.targetWeight = 0.0,
   });
 
@@ -63,8 +63,8 @@ class Profile {
       'age': age,
       'height': height,
       'weight': weight,
-      'activityLevel': activityLevel?.value,
-      'goal': goal?.value,
+      'activityLevel': activityLevel.value,
+      'goal': goal.value,
       'targetWeight': targetWeight,
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
@@ -98,8 +98,8 @@ class Profile {
       age: 0,
       height: 0,
       weight: 0,
-      activityLevel: null,
-      goal: null,
+      activityLevel: ActivityLevel.sedentary,
+      goal: Goal.maintain,
       targetWeight: 0.0,
     );
   }
@@ -111,25 +111,13 @@ class Profile {
         age > 0 &&
         height > 0 &&
         weight > 0;
-    bool activityValid = activityLevel != null;
-    bool goalValid = goal != null;
 
+    bool goalValid = true;
     if (goal == Goal.gain || goal == Goal.lose) {
       goalValid = goalValid && targetWeight > 0;
     }
 
-    return basicInfoValid && activityValid && goalValid;
-  }
-
-  bool get isEmpty {
-    return username.isEmpty &&
-        gender.isEmpty &&
-        age == 0 &&
-        height == 0 &&
-        weight == 0 &&
-        activityLevel == null &&
-        goal == null &&
-        targetWeight == 0;
+    return basicInfoValid && goalValid;
   }
 
   double get bmi {
@@ -236,7 +224,7 @@ class Profile {
     }
 
     double multiplier;
-    switch (activityLevel!) {
+    switch (activityLevel) {
       case ActivityLevel.sedentary:
         multiplier = 1.2;
         break;
@@ -262,7 +250,7 @@ class Profile {
       return 0;
     }
 
-    switch (goal!) {
+    switch (goal) {
       case Goal.maintain:
         return tdee;
       case Goal.lose:
@@ -311,24 +299,22 @@ class Profile {
     }
 
     // Hoạt động
-    if (activityLevel != null) {
-      switch (activityLevel!) {
-        case ActivityLevel.sedentary:
-          multiplier *= 1.0;
-          break;
-        case ActivityLevel.light:
-          multiplier *= 1.1;
-          break;
-        case ActivityLevel.moderate:
-          multiplier *= 1.2;
-          break;
-        case ActivityLevel.active:
-          multiplier *= 1.3;
-          break;
-        case ActivityLevel.veryActive:
-          multiplier *= 1.4;
-          break;
-      }
+    switch (activityLevel) {
+      case ActivityLevel.sedentary:
+        multiplier *= 1.0;
+        break;
+      case ActivityLevel.light:
+        multiplier *= 1.1;
+        break;
+      case ActivityLevel.moderate:
+        multiplier *= 1.2;
+        break;
+      case ActivityLevel.active:
+        multiplier *= 1.3;
+        break;
+      case ActivityLevel.veryActive:
+        multiplier *= 1.4;
+        break;
     }
 
     // BMI adjustment
@@ -349,7 +335,7 @@ class Profile {
     }
 
     double proteinPerKg;
-    switch (goal!) {
+    switch (goal) {
       case Goal.lose:
         proteinPerKg = 2.0;
         break;
@@ -378,7 +364,7 @@ class Profile {
     }
 
     double fatPercentage;
-    switch (goal!) {
+    switch (goal) {
       case Goal.lose:
         fatPercentage = 0.25;
         break;
@@ -472,13 +458,13 @@ enum ActivityLevel {
   final String description;
   final IconData icon;
 
-  static ActivityLevel? fromValue(String value) {
+  static ActivityLevel fromValue(String value) {
     for (ActivityLevel activityLevel in ActivityLevel.values) {
       if (activityLevel.value == value) {
         return activityLevel;
       }
     }
-    return null;
+    return ActivityLevel.sedentary;
   }
 }
 
@@ -514,13 +500,13 @@ enum Goal {
   final IconData icon;
   final Color color;
 
-  static Goal? fromValue(String value) {
+  static Goal fromValue(String value) {
     for (Goal goal in Goal.values) {
       if (goal.value == value) {
         return goal;
       }
     }
-    return null;
+    return Goal.maintain;
   }
 
   bool get needsTargetWeight => this == Goal.lose || this == Goal.gain;

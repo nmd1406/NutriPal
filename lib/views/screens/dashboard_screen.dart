@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nutripal/viewmodels/auth_viewmodel.dart';
 import 'package:nutripal/viewmodels/diary_record_viewmodel.dart';
 import 'package:nutripal/viewmodels/profile_viewmodel.dart';
 import 'package:nutripal/views/widgets/calories_card.dart';
@@ -38,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 Text(
                   profileState.when(
-                    data: (user) => user?.username ?? "User",
+                    data: (user) => user.username,
                     error: (_, _) => "Lỗi",
                     loading: () => "Đang tải...",
                   ),

@@ -67,7 +67,7 @@ class _TDEETabState extends ConsumerState<TDEETab> {
         final TDEEViewModel tdeeViewModel = ref.read(
           tdeeViewModelProvider.notifier,
         );
-        final needsTargetWeight = tdeeState.goal?.needsTargetWeight ?? false;
+        final needsTargetWeight = tdeeState.goal.needsTargetWeight;
 
         return SingleChildScrollView(
           child: Form(
@@ -86,8 +86,8 @@ class _TDEETabState extends ConsumerState<TDEETab> {
                   const SizedBox(height: 28),
                   TDEECard(
                     tdee: profile.tdee,
-                    activityLevel: profile.activityLevel!,
-                    goal: profile.goal!,
+                    activityLevel: profile.activityLevel,
+                    goal: profile.goal,
                   ),
 
                   const SizedBox(height: 32),

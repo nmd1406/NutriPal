@@ -117,26 +117,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ? null
                     : () async {
                         if (_formKey.currentState!.validate()) {
-                          try {
-                            // Tạo tài khoản
-                            await authViewModel.signup(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text.trim(),
-                              context: context,
-                            );
+                          await authViewModel.signup(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text.trim(),
+                            context: context,
+                          );
 
-                            // Sau khi tạo tài khoản thành công, cập nhật username vào ProfileViewModel
-                            final authUser = ref
-                                .read(authViewModelProvider)
-                                .value;
-                            if (authUser != null && mounted) {
-                              // Cập nhật username trong ProfileViewModel để sẵn sàng cho màn hình setup
-                              profileViewModel.updateUsername(
-                                _usernameController.text.trim(),
-                              );
-                            }
-                          } catch (e) {
-                            // Lỗi sẽ được hiển thị qua authState.when
+                          final authUser = ref
+                              .read(authViewModelProvider)
+                              .value;
+                          if (authUser != null && mounted) {
+                            await profileViewModel.updateUsername(
+                              _usernameController.text.trim(),
+                            );
                           }
                         }
                       },

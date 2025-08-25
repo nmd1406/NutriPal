@@ -84,11 +84,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             _weightController.text.isNotEmpty &&
             _basicInfoFormKey.currentState?.validate() == true;
       case 1:
-        return profile.activityLevel != null;
+        return true;
       case 2:
-        if (profile.goal == null) {
-          return false;
-        }
         if (profile.goal == Goal.lose || profile.goal == Goal.gain) {
           return _targetWeightController.text.trim().isNotEmpty &&
               (_targetFormKey.currentState?.validate() ?? false);
@@ -108,7 +105,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       _nextStep();
     } else if (_currentStep == 2) {
       final profile = ref.read(profileViewModelProvider).valueOrNull;
-      print(profile);
       final needsTargetWeight =
           profile?.goal == Goal.lose || profile?.goal == Goal.gain;
 

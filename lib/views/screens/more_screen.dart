@@ -45,7 +45,7 @@ class MoreScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 26,
-                  child: ClipOval(child: Image.network(profile.imageUrl)),
+                  backgroundImage: NetworkImage(profile.imageUrl),
                 ),
                 const SizedBox(width: 12),
                 Text(

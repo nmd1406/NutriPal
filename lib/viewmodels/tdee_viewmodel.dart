@@ -50,8 +50,8 @@ class TDEEViewModel extends StateNotifier<Profile> {
       profileViewModelProvider.notifier,
     );
 
-    profileViewModel.updateActivityLevel(state.activityLevel!);
-    profileViewModel.updateGoal(state.goal!.value);
+    profileViewModel.updateActivityLevel(state.activityLevel);
+    profileViewModel.updateGoal(state.goal.value);
     profileViewModel.updateTargetWeight(state.targetWeight.toString());
   }
 }
